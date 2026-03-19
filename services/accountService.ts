@@ -441,7 +441,8 @@ export const accountService = {
     const { data, error } = await supabase
       .from('account_career_logs')
       .insert([payload])
-      .select();
+      .select()
+      .single();
 
     if (error) {
       console.error("CAREER_LOG_CREATE_ERROR:", error.message);
@@ -457,7 +458,7 @@ export const accountService = {
       schedule_type: schedule_type || null
     });
 
-    return data[0] as CareerLog;
+    return data as CareerLog;
   },
 
   async updateCareerLog(id: string, logInput: Partial<CareerLogInput>) {
@@ -516,7 +517,8 @@ export const accountService = {
     const { data, error } = await supabase
       .from('account_health_logs')
       .insert([payload])
-      .select();
+      .select()
+      .single();
 
     if (error) {
       console.error("HEALTH_LOG_CREATE_ERROR:", error.message);
@@ -529,7 +531,7 @@ export const accountService = {
       health_risk
     });
 
-    return data[0] as HealthLog;
+    return data as HealthLog;
   },
 
   async updateHealthLog(id: string, logInput: Partial<HealthLogInput>) {
@@ -540,21 +542,22 @@ export const accountService = {
       .from('account_health_logs')
       .update(payload)
       .eq('id', id)
-      .select();
+      .select()
+      .single();
 
     if (error) {
       console.error("HEALTH_LOG_UPDATE_ERROR:", error.message);
       throw error;
     }
 
-    if (account_id) {
-      await this.update(account_id, {
-        mcu_status,
-        health_risk
+    if (data && data.account_id) {
+      await this.update(data.account_id, {
+        mcu_status: data.mcu_status,
+        health_risk: data.health_risk
       });
     }
 
-    return data[0] as HealthLog;
+    return data as HealthLog;
   },
 
   async deleteHealthLog(id: string) {

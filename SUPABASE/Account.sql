@@ -131,11 +131,13 @@ DO $$
 BEGIN
     DROP POLICY IF EXISTS "Allow public read career logs" ON account_career_logs;
     DROP POLICY IF EXISTS "Allow public insert career logs" ON account_career_logs;
+    DROP POLICY IF EXISTS "Allow public update career logs" ON account_career_logs;
     DROP POLICY IF EXISTS "Allow public delete career logs" ON account_career_logs;
 END $$;
 
 CREATE POLICY "Allow public read career logs" ON account_career_logs FOR SELECT TO public USING (true);
 CREATE POLICY "Allow public insert career logs" ON account_career_logs FOR INSERT TO public WITH CHECK (true);
+CREATE POLICY "Allow public update career logs" ON account_career_logs FOR UPDATE TO public USING (true);
 CREATE POLICY "Allow public delete career logs" ON account_career_logs FOR DELETE TO public USING (true);
 
 ALTER TABLE account_health_logs ENABLE ROW LEVEL SECURITY;
@@ -143,11 +145,13 @@ DO $$
 BEGIN
     DROP POLICY IF EXISTS "Allow public read health logs" ON account_health_logs;
     DROP POLICY IF EXISTS "Allow public insert health logs" ON account_health_logs;
+    DROP POLICY IF EXISTS "Allow public update health logs" ON account_health_logs;
     DROP POLICY IF EXISTS "Allow public delete health logs" ON account_health_logs;
 END $$;
 
 CREATE POLICY "Allow public read health logs" ON account_health_logs FOR SELECT TO public USING (true);
 CREATE POLICY "Allow public insert health logs" ON account_health_logs FOR INSERT TO public WITH CHECK (true);
+CREATE POLICY "Allow public update health logs" ON account_health_logs FOR UPDATE TO public USING (true);
 CREATE POLICY "Allow public delete health logs" ON account_health_logs FOR DELETE TO public USING (true);
 
 -- MEMASTIKAN FOREIGN KEY TERDAFTAR (Fix error PGRST200 & 23503)

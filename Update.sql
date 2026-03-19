@@ -77,3 +77,13 @@ EXECUTE FUNCTION handle_updated_at();
 
 -- 6. PENAMBAHAN KOLOM ALASAN PADA TABEL OVERTIMES
 ALTER TABLE overtimes ADD COLUMN IF NOT EXISTS reason TEXT;
+
+-- 7. PERBAIKAN POLICIES RIWAYAT (Fix Error 406 / Missing Update Policy)
+DO $$ 
+BEGIN
+    DROP POLICY IF EXISTS "Allow public update career logs" ON account_career_logs;
+    DROP POLICY IF EXISTS "Allow public update health logs" ON account_health_logs;
+END $$;
+
+CREATE POLICY "Allow public update career logs" ON account_career_logs FOR UPDATE TO public USING (true);
+CREATE POLICY "Allow public update health logs" ON account_health_logs FOR UPDATE TO public USING (true);
