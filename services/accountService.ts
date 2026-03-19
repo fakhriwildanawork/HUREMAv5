@@ -468,24 +468,25 @@ export const accountService = {
       .from('account_career_logs')
       .update(payload)
       .eq('id', id)
-      .select();
+      .select()
+      .single();
 
     if (error) {
       console.error("CAREER_LOG_UPDATE_ERROR:", error.message);
       throw error;
     }
 
-    if (account_id) {
-      await this.update(account_id, {
-        position,
-        grade,
-        location_id: location_id || null,
-        schedule_id: schedule_id || null,
-        schedule_type: schedule_type || null
+    if (data && data.account_id) {
+      await this.update(data.account_id, {
+        position: data.position,
+        grade: data.grade,
+        location_id: data.location_id || null,
+        schedule_id: data.schedule_id || null,
+        schedule_type: data.schedule_type || null
       });
     }
 
-    return data[0] as CareerLog;
+    return data as CareerLog;
   },
 
   async deleteCareerLog(id: string) {

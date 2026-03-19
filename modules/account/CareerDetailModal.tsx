@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { X, Briefcase, FileText, Paperclip, ExternalLink, MapPin, Calendar } from 'lucide-react';
+import { X, Briefcase, FileText, Paperclip, ExternalLink, MapPin, Calendar, CalendarClock } from 'lucide-react';
 import { CareerLog } from '../../types';
 import { googleDriveService } from '../../services/googleDriveService';
 
@@ -58,6 +58,13 @@ const CareerDetailModal: React.FC<CareerDetailModalProps> = ({ log, onClose }) =
                   <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Lokasi Penempatan</p>
                 </div>
                 <p className="text-sm font-bold text-gray-700">{log.location_name}</p>
+              </div>
+              <div className="bg-white p-4 rounded border border-gray-100 shadow-sm">
+                <div className="flex items-center gap-2 mb-1">
+                  <CalendarClock size={14} className="text-[#006E62]" />
+                  <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Jadwal Kerja</p>
+                </div>
+                <p className="text-sm font-bold text-gray-700">{log.schedule_type || '-'}</p>
               </div>
               <div className="bg-white p-4 rounded border border-gray-100 shadow-sm">
                 <div className="flex items-center gap-2 mb-1">

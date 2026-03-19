@@ -40,6 +40,7 @@ const LogForm: React.FC<LogFormProps> = ({ type, accountId, initialData, isEdit 
 
   const [locations, setLocations] = useState<Location[]>([]);
   const [schedules, setSchedules] = useState<Schedule[]>([]);
+  const [allSchedules, setAllSchedules] = useState<Schedule[]>([]);
   const [suggestions, setSuggestions] = useState<{ positions: string[], grades: string[] }>({ positions: [], grades: [] });
   const [uploading, setUploading] = useState(false);
   
@@ -53,6 +54,7 @@ const LogForm: React.FC<LogFormProps> = ({ type, accountId, initialData, isEdit 
   useEffect(() => {
     if (type === 'career') {
       locationService.getAll().then(setLocations);
+      scheduleService.getAll().then(setAllSchedules);
       accountService.getDistinctAttributes().then(setSuggestions);
     }
 
@@ -140,8 +142,9 @@ const LogForm: React.FC<LogFormProps> = ({ type, accountId, initialData, isEdit 
       } else if (finalScheduleId === 'DINAMIS') {
         finalScheduleType = 'Shift Dinamis';
         finalScheduleId = '';
-      } else {
-        const sch = schedules.find(s => s.id === finalScheduleId);
+      } else if (finalScheduleId) {
+        // Cari nama jadwal dari list lengkap (allSchedules) agar lebih akurat
+        const sch = allSchedules.find(s => s.id === finalScheduleId) || schedules.find(s => s.id === finalScheduleId);
         if (sch) finalScheduleType = sch.name;
       }
 
