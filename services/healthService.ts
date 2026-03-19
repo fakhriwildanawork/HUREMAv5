@@ -21,14 +21,7 @@ export const healthService = {
   },
 
   async downloadTemplate() {
-    // Optimasi: Hanya ambil data minimal untuk mencegah lag saat download
-    const { data: accounts, error } = await supabase
-      .from('accounts')
-      .select('id, internal_nik, full_name')
-      .is('end_date', null)
-      .not('access_code', 'ilike', '%SPADMIN%');
-
-    if (error) throw error;
+    const accounts = await accountService.getAll();
 
     const workbook = new ExcelJS.Workbook();
     const wsImport = workbook.addWorksheet('Health_Import');
@@ -40,43 +33,48 @@ export const healthService = {
       'Account ID (Hidden)', 
       'NIK Internal', 
       'Nama Karyawan', 
+      'Nomor Dokumen (Opsional - Untuk Lampiran)',
       'Status MCU (*)', 
       'Risiko Kesehatan (*)', 
       'Tanggal Pemeriksaan (YYYY-MM-DD) (*)', 
-      'Catatan / Keterangan', 
-      'Link Hasil MCU G-Drive (Opsional)'
+      'Catatan / Keterangan'
     ];
     wsImport.addRow(headers);
 
     const headerRow = wsImport.getRow(3);
     headerRow.font = { bold: true };
 
+    // Mandatory columns: E (Status MCU), F (Risiko), G (Tanggal)
+    [5, 6, 7].forEach(colIdx => {
+      const cell = headerRow.getCell(colIdx);
+      cell.font = { color: { argb: 'FFFF0000' }, bold: true };
+    });
+
     accounts?.forEach(acc => {
       wsImport.addRow([acc.id, acc.internal_nik, acc.full_name, '', '', '', '', '']);
     });
 
     const rowCount = wsImport.rowCount;
-    // Optimasi: Loop hanya pada baris yang memiliki data
     for (let i = 4; i <= rowCount; i++) {
-      const cellF = wsImport.getCell(`F${i}`);
-      cellF.dataValidation = {
+      const cellG = wsImport.getCell(`G${i}`);
+      cellG.dataValidation = {
         type: 'date',
         operator: 'greaterThan',
         allowBlank: true,
         formulae: [new Date(1900, 0, 1)]
       };
-      cellF.numFmt = 'yyyy-mm-dd';
+      cellG.numFmt = 'yyyy-mm-dd';
     }
 
     wsImport.columns.forEach((col, idx) => {
-      col.width = [20, 15, 25, 20, 20, 22, 25, 30][idx];
+      col.width = [20, 15, 25, 30, 20, 20, 22, 25][idx];
     });
 
     const buffer = await workbook.xlsx.writeBuffer();
     saveAs(new Blob([buffer]), `HUREMA_Health_Template_${new Date().toISOString().split('T')[0]}.xlsx`);
   },
 
-  async processImport(file: File) {
+  async processImport(file: File, bulkFiles: Record<string, string> = {}) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = async (e) => {
@@ -91,6 +89,17 @@ export const healthService = {
               effectiveDate = new Date((effectiveDate - 25569) * 86400 * 1000).toISOString().split('T')[0];
             }
 
+            const docNumber = row['Nomor Dokumen (Opsional - Untuk Lampiran)'] || '';
+            let matchedFileId = null;
+            if (docNumber) {
+              const normalizedNo = String(docNumber).replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+              const match = Object.entries(bulkFiles).find(([fileName]) => {
+                const normalizedFileName = fileName.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+                return normalizedFileName === normalizedNo;
+              });
+              if (match) matchedFileId = match[1];
+            }
+
             return {
               account_id: row['Account ID (Hidden)'],
               full_name: row['Nama Karyawan'],
@@ -98,7 +107,7 @@ export const healthService = {
               health_risk: row['Risiko Kesehatan (*)'],
               change_date: effectiveDate,
               notes: row['Catatan / Keterangan'] || null,
-              file_mcu_link: row['Link Hasil MCU G-Drive (Opsional)'] || null,
+              file_mcu_id: matchedFileId,
               isValid: !!(row['Account ID (Hidden)'] && row['Status MCU (*)'] && row['Risiko Kesehatan (*)'] && effectiveDate)
             };
           });
@@ -118,7 +127,7 @@ export const healthService = {
         health_risk: item.health_risk,
         notes: item.notes,
         change_date: item.change_date,
-        file_mcu_id: item.file_mcu_link ? item.file_mcu_link.match(/[-\w]{25,}/)?.[0] : null
+        file_mcu_id: item.file_mcu_id || null
       });
     }
   },

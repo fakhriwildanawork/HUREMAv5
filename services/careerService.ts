@@ -21,14 +21,7 @@ export const careerService = {
   },
 
   async downloadTemplate() {
-    // Optimasi: Hanya ambil data minimal untuk mencegah lag saat download
-    const { data: accounts, error } = await supabase
-      .from('accounts')
-      .select('id, internal_nik, full_name')
-      .is('end_date', null)
-      .not('access_code', 'ilike', '%SPADMIN%');
-
-    if (error) throw error;
+    const accounts = await accountService.getAll();
 
     const workbook = new ExcelJS.Workbook();
     const wsImport = workbook.addWorksheet('Career_Import');
@@ -40,46 +33,51 @@ export const careerService = {
       'Account ID (Hidden)', 
       'NIK Internal', 
       'Nama Karyawan', 
+      'Nomor SK (Opsional - Untuk Lampiran)',
       'Jabatan Baru (*)', 
       'Grade Baru (*)', 
       'ID Lokasi (*)', 
       'Nama Lokasi (*)', 
       'ID Jadwal (*)', 
       'Tanggal Perubahan (YYYY-MM-DD) (*)', 
-      'Catatan / Keterangan', 
-      'Link SK G-Drive (Opsional)'
+      'Catatan / Keterangan'
     ];
     wsImport.addRow(headers);
 
     const headerRow = wsImport.getRow(3);
     headerRow.font = { bold: true };
 
+    // Mandatory columns: E (Jabatan), F (Grade), G (ID Lokasi), H (Nama Lokasi), I (ID Jadwal), J (Tanggal)
+    [5, 6, 7, 8, 9, 10].forEach(colIdx => {
+      const cell = headerRow.getCell(colIdx);
+      cell.font = { color: { argb: 'FFFF0000' }, bold: true };
+    });
+
     accounts?.forEach(acc => {
       wsImport.addRow([acc.id, acc.internal_nik, acc.full_name, '', '', '', '', '', '', '', '']);
     });
 
     const rowCount = wsImport.rowCount;
-    // Optimasi: Loop hanya pada baris yang memiliki data
     for (let i = 4; i <= rowCount; i++) {
-      const cellI = wsImport.getCell(`I${i}`);
-      cellI.dataValidation = {
+      const cellJ = wsImport.getCell(`J${i}`);
+      cellJ.dataValidation = {
         type: 'date',
         operator: 'greaterThan',
         allowBlank: true,
         formulae: [new Date(1900, 0, 1)]
       };
-      cellI.numFmt = 'yyyy-mm-dd';
+      cellJ.numFmt = 'yyyy-mm-dd';
     }
 
     wsImport.columns.forEach((col, idx) => {
-      col.width = [20, 15, 25, 20, 15, 15, 20, 15, 22, 25, 30][idx];
+      col.width = [20, 15, 25, 30, 20, 15, 15, 20, 15, 22, 25][idx];
     });
 
     const buffer = await workbook.xlsx.writeBuffer();
     saveAs(new Blob([buffer]), `HUREMA_Career_Template_${new Date().toISOString().split('T')[0]}.xlsx`);
   },
 
-  async processImport(file: File) {
+  async processImport(file: File, bulkFiles: Record<string, string> = {}) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = async (e) => {
@@ -94,6 +92,17 @@ export const careerService = {
               effectiveDate = new Date((effectiveDate - 25569) * 86400 * 1000).toISOString().split('T')[0];
             }
 
+            const skNumber = row['Nomor SK (Opsional - Untuk Lampiran)'] || '';
+            let matchedFileId = null;
+            if (skNumber) {
+              const normalizedNo = String(skNumber).replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+              const match = Object.entries(bulkFiles).find(([fileName]) => {
+                const normalizedFileName = fileName.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+                return normalizedFileName === normalizedNo;
+              });
+              if (match) matchedFileId = match[1];
+            }
+
             return {
               account_id: row['Account ID (Hidden)'],
               full_name: row['Nama Karyawan'],
@@ -104,7 +113,7 @@ export const careerService = {
               schedule_id: row['ID Jadwal (*)'],
               change_date: effectiveDate,
               notes: row['Catatan / Keterangan'] || null,
-              file_sk_link: row['Link SK G-Drive (Opsional)'] || null,
+              file_sk_id: matchedFileId,
               isValid: !!(row['Account ID (Hidden)'] && row['Jabatan Baru (*)'] && row['Grade Baru (*)'] && row['ID Lokasi (*)'] && row['Nama Lokasi (*)'] && row['ID Jadwal (*)'] && effectiveDate)
             };
           });
@@ -127,7 +136,7 @@ export const careerService = {
         schedule_id: item.schedule_id,
         notes: item.notes,
         change_date: item.change_date,
-        file_sk_id: item.file_sk_link ? item.file_sk_link.match(/[-\w]{25,}/)?.[0] : null
+        file_sk_id: item.file_sk_id || null
       });
     }
   },

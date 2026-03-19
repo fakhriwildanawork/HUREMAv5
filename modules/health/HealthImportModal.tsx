@@ -1,8 +1,8 @@
-
 import React, { useState } from 'react';
-import { X, FileUp, Download, CheckCircle, AlertTriangle, Save, Loader2, Activity } from 'lucide-react';
+import { X, FileUp, Download, CheckCircle, AlertTriangle, Save, Loader2, Paperclip, Activity } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { healthService } from '../../services/healthService';
+import { googleDriveService } from '../../services/googleDriveService';
 
 interface HealthImportModalProps {
   onClose: () => void;
@@ -14,6 +14,41 @@ const HealthImportModal: React.FC<HealthImportModalProps> = ({ onClose, onSucces
   const [previewData, setPreviewData] = useState<any[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isUploadingAttachments, setIsUploadingAttachments] = useState(false);
+  const [bulkFiles, setBulkFiles] = useState<Record<string, string>>({});
+
+  const handleBulkFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    try {
+      setIsUploadingAttachments(true);
+      const mapping: Record<string, string> = {};
+      
+      const uploadPromises = Array.from(files).map(async (f) => {
+        const file = f as File;
+        const fileId = await googleDriveService.uploadFile(file);
+        const fileName = file.name.split('.').slice(0, -1).join('.');
+        mapping[fileName] = fileId;
+      });
+
+      await Promise.all(uploadPromises);
+      setBulkFiles(prev => ({ ...prev, ...mapping }));
+      
+      Swal.fire({
+        title: 'Berhasil!',
+        text: `${files.length} lampiran hasil MCU berhasil diunggah dan siap dipasangkan.`,
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false
+      });
+    } catch (error) {
+      Swal.fire('Gagal', 'Gagal mengunggah beberapa lampiran.', 'error');
+    } finally {
+      setIsUploadingAttachments(false);
+      if (e.target) e.target.value = '';
+    }
+  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -21,7 +56,7 @@ const HealthImportModal: React.FC<HealthImportModalProps> = ({ onClose, onSucces
 
     try {
       setIsProcessing(true);
-      const results = await healthService.processImport(file) as any[];
+      const results = await healthService.processImport(file, bulkFiles) as any[];
       setPreviewData(results);
       setStep(2);
     } catch (error) {
@@ -81,8 +116,8 @@ const HealthImportModal: React.FC<HealthImportModalProps> = ({ onClose, onSucces
                 <Activity size={32} />
               </div>
               <div className="text-center max-w-md">
-                <h4 className="text-lg font-bold text-gray-800">Unggah Template Kesehatan</h4>
-                <p className="text-xs text-gray-500 mt-2">Pastikan data Status MCU dan Risiko Kesehatan sesuai dengan hasil pemeriksaan terbaru karyawan.</p>
+                <h4 className="text-lg font-bold text-gray-800">Unggah Excel Kesehatan</h4>
+                <p className="text-xs text-gray-500 mt-2">Gunakan template resmi HUREMA. Sistem akan mencatat riwayat pemeriksaan kesehatan baru dan memperbarui status medis di profil akun secara otomatis.</p>
               </div>
 
               <div className="flex flex-col gap-3 w-full max-w-xs">
@@ -92,9 +127,16 @@ const HealthImportModal: React.FC<HealthImportModalProps> = ({ onClose, onSucces
                 >
                   <Download size={18} /> 1. Download Template
                 </button>
+                
+                <label className="flex items-center justify-center gap-2 border border-gray-200 px-4 py-3 rounded-md hover:bg-gray-50 transition-colors text-sm font-bold text-gray-600 uppercase tracking-tighter cursor-pointer">
+                  {isUploadingAttachments ? <Loader2 size={18} className="animate-spin" /> : <Paperclip size={18} />}
+                  {isUploadingAttachments ? 'Mengunggah...' : `2. Unggah Lampiran Hasil MCU (${Object.keys(bulkFiles).length} File)`}
+                  <input type="file" className="hidden" accept="image/*,application/pdf" multiple onChange={handleBulkFileUpload} disabled={isUploadingAttachments} />
+                </label>
+
                 <label className="flex items-center justify-center gap-2 bg-[#006E62] text-white px-4 py-3 rounded-md hover:bg-[#005a50] transition-colors shadow-md text-sm font-bold uppercase tracking-tighter cursor-pointer">
                   {isProcessing ? <Loader2 size={18} className="animate-spin" /> : <FileUp size={18} />}
-                  {isProcessing ? 'Memproses...' : '2. Unggah Excel Terisi'}
+                  {isProcessing ? 'Memproses...' : '3. Unggah Excel Terisi'}
                   <input type="file" className="hidden" accept=".xlsx" onChange={handleFileChange} disabled={isProcessing} />
                 </label>
               </div>
@@ -114,10 +156,11 @@ const HealthImportModal: React.FC<HealthImportModalProps> = ({ onClose, onSucces
                   <thead className="bg-gray-50 font-bold text-gray-500 uppercase">
                     <tr>
                       <th className="px-4 py-2">Status</th>
-                      <th className="px-4 py-2">Nama</th>
+                      <th className="px-4 py-2">Nama Karyawan</th>
                       <th className="px-4 py-2">Status MCU</th>
                       <th className="px-4 py-2">Risiko</th>
-                      <th className="px-4 py-2">Tgl</th>
+                      <th className="px-4 py-2">Tgl Pemeriksaan</th>
+                      <th className="px-4 py-2">Lampiran</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
@@ -140,6 +183,13 @@ const HealthImportModal: React.FC<HealthImportModalProps> = ({ onClose, onSucces
                            </span>
                         </td>
                         <td className="px-4 py-2">{row.change_date}</td>
+                        <td className="px-4 py-2">
+                          {row.file_mcu_id ? (
+                            <span className="flex items-center gap-1 text-emerald-600 font-bold"><Paperclip size={12} /> OK</span>
+                          ) : (
+                            <span className="text-gray-400 italic">Tidak ada</span>
+                          )}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
