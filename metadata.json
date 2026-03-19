@@ -1,0 +1,8 @@
+{
+  "name": "HUREMA v5",
+  "description": "Sistem Manajemen Sumber Daya Terpadu dengan fitur Presensi, Cuti, Izin, dan Manajemen Performa (KPI) berbasis Supabase dan Google Drive.",
+  "requestFramePermissions": [
+    "camera",
+    "geolocation"
+  ]
+}
