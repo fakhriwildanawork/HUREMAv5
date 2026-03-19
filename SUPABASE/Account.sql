@@ -65,6 +65,7 @@ CREATE TABLE IF NOT EXISTS account_career_logs (
     location_id UUID REFERENCES locations(id) ON DELETE SET NULL,
     location_name TEXT,
     schedule_id UUID REFERENCES schedules(id) ON DELETE SET NULL,
+    schedule_type TEXT,
     file_sk_id TEXT,
     notes TEXT,
     change_date TIMESTAMP WITH TIME ZONE DEFAULT NOW()

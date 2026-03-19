@@ -110,7 +110,15 @@ const AccountDetail: React.FC<AccountDetailProps> = ({ id, onClose, onEdit, onDe
           const created = await accountService.createCareerLog(data);
           setCareerLogs(prev => prev.map(l => l.id === tempId ? created : l));
         }
-        setAccount(prev => prev ? { ...prev, position: data.position, grade: data.grade, location_id: data.location_id, location: { ...prev.location, name: data.location_name } } : null);
+        setAccount(prev => prev ? { 
+          ...prev, 
+          position: data.position, 
+          grade: data.grade, 
+          location_id: data.location_id, 
+          location: { ...prev?.location, name: data.location_name },
+          schedule_id: data.schedule_id,
+          schedule_type: data.schedule_type
+        } : null);
       } else if (type === 'health') {
         if (isEdit) {
           const updated = await accountService.updateHealthLog(data.id, data);
