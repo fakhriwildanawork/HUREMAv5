@@ -436,7 +436,7 @@ export const accountService = {
   async createCareerLog(logInput: CareerLogInput) {
     // Filtrasi: Pastikan hanya kolom yang ada di tabel account_career_logs yang dikirim
     const { account_id, position, grade, location_name, file_sk_id, notes, location_id, schedule_id, schedule_type, change_date } = logInput;
-    const payload = sanitizePayload({ account_id, position, grade, location_name, file_sk_id, notes, change_date, location_id, schedule_id, schedule_type });
+    const payload = sanitizePayload({ account_id, position, grade, location_name, file_sk_id, notes, change_date, location_id, schedule_id });
     
     const { data, error } = await supabase
       .from('account_career_logs')
@@ -462,7 +462,7 @@ export const accountService = {
 
   async updateCareerLog(id: string, logInput: Partial<CareerLogInput>) {
     const { account_id, position, grade, location_name, file_sk_id, notes, location_id, schedule_id, schedule_type, change_date } = logInput;
-    const payload = sanitizePayload({ account_id, position, grade, location_name, file_sk_id, notes, change_date, location_id, schedule_id, schedule_type });
+    const payload = sanitizePayload({ account_id, position, grade, location_name, file_sk_id, notes, change_date, location_id, schedule_id });
 
     const { data, error } = await supabase
       .from('account_career_logs')

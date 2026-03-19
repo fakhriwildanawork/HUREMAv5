@@ -190,7 +190,6 @@ export interface CareerLog {
   location_id?: string | null;
   location_name: string;
   schedule_id?: string | null;
-  schedule_type?: string | null;
   file_sk_id?: string | null;
   notes?: string | null;
   change_date: string;
@@ -430,7 +429,7 @@ export interface AppSetting {
 export type LocationInput = Omit<Location, 'id' | 'created_at' | 'updated_at' | 'search_all'>;
 export type LocationAdminInput = Omit<LocationAdministration, 'id' | 'created_at'>;
 export type AccountInput = Omit<Account, 'id' | 'created_at' | 'updated_at' | 'search_all' | 'location'>;
-export type CareerLogInput = Omit<CareerLog, 'id'>;
+export type CareerLogInput = Omit<CareerLog, 'id'> & { schedule_type?: string | null };
 export type HealthLogInput = Omit<HealthLog, 'id'>;
 export type AccountContractInput = Omit<AccountContract, 'id' | 'created_at' | 'updated_at'>;
 export type AccountContractInputExtended = AccountContractInput;
