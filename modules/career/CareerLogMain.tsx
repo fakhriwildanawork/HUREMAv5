@@ -257,7 +257,7 @@ const CareerLogMain: React.FC = () => {
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-xs font-bold text-[#006E62]">{log.position}</div>
-                      <div className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Grade: {log.grade || '-'}</div>
+                      <div className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Departemen/Divisi: {log.grade || '-'}</div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-xs text-gray-600 font-medium">{log.location_name}</div>
@@ -354,7 +354,7 @@ const CareerLogMain: React.FC = () => {
                   <p className="text-sm font-bold text-[#006E62]">{selectedLog.position}</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Grade</p>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Departemen/Divisi</p>
                   <p className="text-sm font-bold text-gray-800">{selectedLog.grade || '-'}</p>
                 </div>
                 <div className="space-y-1">

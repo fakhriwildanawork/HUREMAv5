@@ -259,7 +259,7 @@ const LogForm: React.FC<LogFormProps> = ({ type, accountId, initialData, isEdit 
                   )}
                 </div>
                 <div className="space-y-1 relative" ref={gradeRef}>
-                  <label htmlFor="grade" className="text-[9px] font-bold text-gray-500 uppercase">Golongan</label>
+                  <label htmlFor="grade" className="text-[9px] font-bold text-gray-500 uppercase">Departemen/Divisi</label>
                   <div className="relative">
                     <input 
                       id="grade"
