@@ -33,7 +33,7 @@ export const careerService = {
       'Account ID (Hidden)', 
       'NIK Internal', 
       'Nama Karyawan', 
-      'Nomor SK (Opsional - Untuk Lampiran)',
+      'Nomor SK (*)',
       'Jabatan Baru (*)', 
       'Grade Baru (*)', 
       'ID Lokasi (*)', 
@@ -47,8 +47,8 @@ export const careerService = {
     const headerRow = wsImport.getRow(3);
     headerRow.font = { bold: true };
 
-    // Mandatory columns: E (Jabatan), F (Grade), G (ID Lokasi), H (Nama Lokasi), I (ID Jadwal), J (Tanggal)
-    [5, 6, 7, 8, 9, 10].forEach(colIdx => {
+    // Mandatory columns: D (Nomor SK), E (Jabatan), F (Grade), G (ID Lokasi), H (Nama Lokasi), I (ID Jadwal), J (Tanggal)
+    [4, 5, 6, 7, 8, 9, 10].forEach(colIdx => {
       const cell = headerRow.getCell(colIdx);
       cell.font = { color: { argb: 'FFFF0000' }, bold: true };
     });
@@ -92,7 +92,7 @@ export const careerService = {
               effectiveDate = new Date((effectiveDate - 25569) * 86400 * 1000).toISOString().split('T')[0];
             }
 
-            const skNumber = row['Nomor SK (Opsional - Untuk Lampiran)'] || '';
+            const skNumber = row['Nomor SK (*)'] || '';
             let matchedFileId = null;
             if (skNumber) {
               const normalizedNo = String(skNumber).replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
@@ -106,6 +106,7 @@ export const careerService = {
             return {
               account_id: row['Account ID (Hidden)'],
               full_name: row['Nama Karyawan'],
+              sk_number: skNumber,
               position: row['Jabatan Baru (*)'],
               grade: row['Grade Baru (*)'],
               location_id: row['ID Lokasi (*)'],
@@ -114,7 +115,7 @@ export const careerService = {
               change_date: effectiveDate,
               notes: row['Catatan / Keterangan'] || null,
               file_sk_id: matchedFileId,
-              isValid: !!(row['Account ID (Hidden)'] && row['Jabatan Baru (*)'] && row['Grade Baru (*)'] && row['ID Lokasi (*)'] && row['Nama Lokasi (*)'] && row['ID Jadwal (*)'] && effectiveDate)
+              isValid: !!(row['Account ID (Hidden)'] && skNumber && row['Jabatan Baru (*)'] && row['Grade Baru (*)'] && row['ID Lokasi (*)'] && row['Nama Lokasi (*)'] && row['ID Jadwal (*)'] && effectiveDate)
             };
           });
           resolve(results);

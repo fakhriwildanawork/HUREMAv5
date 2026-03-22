@@ -33,7 +33,7 @@ export const healthService = {
       'Account ID (Hidden)', 
       'NIK Internal', 
       'Nama Karyawan', 
-      'Nomor Dokumen (Opsional - Untuk Lampiran)',
+      'Nomor Dokumen (*)',
       'Status MCU (*)', 
       'Risiko Kesehatan (*)', 
       'Tanggal Pemeriksaan (YYYY-MM-DD) (*)', 
@@ -44,8 +44,8 @@ export const healthService = {
     const headerRow = wsImport.getRow(3);
     headerRow.font = { bold: true };
 
-    // Mandatory columns: E (Status MCU), F (Risiko), G (Tanggal)
-    [5, 6, 7].forEach(colIdx => {
+    // Mandatory columns: D (Nomor Dokumen), E (Status MCU), F (Risiko), G (Tanggal)
+    [4, 5, 6, 7].forEach(colIdx => {
       const cell = headerRow.getCell(colIdx);
       cell.font = { color: { argb: 'FFFF0000' }, bold: true };
     });
@@ -89,7 +89,7 @@ export const healthService = {
               effectiveDate = new Date((effectiveDate - 25569) * 86400 * 1000).toISOString().split('T')[0];
             }
 
-            const docNumber = row['Nomor Dokumen (Opsional - Untuk Lampiran)'] || '';
+            const docNumber = row['Nomor Dokumen (*)'] || '';
             let matchedFileId = null;
             if (docNumber) {
               const normalizedNo = String(docNumber).replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
@@ -103,12 +103,13 @@ export const healthService = {
             return {
               account_id: row['Account ID (Hidden)'],
               full_name: row['Nama Karyawan'],
+              doc_number: docNumber,
               mcu_status: row['Status MCU (*)'],
               health_risk: row['Risiko Kesehatan (*)'],
               change_date: effectiveDate,
               notes: row['Catatan / Keterangan'] || null,
               file_mcu_id: matchedFileId,
-              isValid: !!(row['Account ID (Hidden)'] && row['Status MCU (*)'] && row['Risiko Kesehatan (*)'] && effectiveDate)
+              isValid: !!(row['Account ID (Hidden)'] && docNumber && row['Status MCU (*)'] && row['Risiko Kesehatan (*)'] && effectiveDate)
             };
           });
           resolve(results);

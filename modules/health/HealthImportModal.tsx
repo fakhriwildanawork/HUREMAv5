@@ -157,6 +157,7 @@ const HealthImportModal: React.FC<HealthImportModalProps> = ({ onClose, onSucces
                     <tr>
                       <th className="px-4 py-2">Status</th>
                       <th className="px-4 py-2">Nama Karyawan</th>
+                      <th className="px-4 py-2">Nomor Dokumen</th>
                       <th className="px-4 py-2">Status MCU</th>
                       <th className="px-4 py-2">Risiko</th>
                       <th className="px-4 py-2">Tgl Pemeriksaan</th>
@@ -174,6 +175,7 @@ const HealthImportModal: React.FC<HealthImportModalProps> = ({ onClose, onSucces
                           )}
                         </td>
                         <td className="px-4 py-2 font-bold">{row.full_name}</td>
+                        <td className="px-4 py-2">{row.doc_number}</td>
                         <td className="px-4 py-2 uppercase font-bold text-[#006E62]">{row.mcu_status}</td>
                         <td className="px-4 py-2">
                            <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${
