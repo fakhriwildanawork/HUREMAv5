@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { History, Search, Filter, Download, FileUp, Paperclip, ExternalLink, UserCircle, Upload, Trash2, Edit2, X, Info } from 'lucide-react';
+import { History, Search, Filter, FileUp, Paperclip, ExternalLink, UserCircle, Upload, Trash2, Edit2, X, Info } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { careerService } from '../../services/careerService';
 import { googleDriveService } from '../../services/googleDriveService';
@@ -178,12 +178,6 @@ const CareerLogMain: React.FC = () => {
               <Trash2 size={18} /> Hapus ({selectedIds.length})
             </button>
           )}
-          <button 
-            onClick={() => careerService.downloadTemplate()}
-            className="flex items-center gap-2 border border-gray-200 px-4 py-2 rounded-md hover:bg-gray-50 transition-colors text-sm font-medium text-gray-600"
-          >
-            <Download size={18} /> Unduh Template
-          </button>
           <button 
             onClick={() => setShowImportModal(true)}
             className="flex items-center gap-2 bg-[#006E62] text-white px-4 py-2 rounded-md hover:bg-[#005a50] transition-colors shadow-sm text-sm font-medium"
