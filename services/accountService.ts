@@ -1,6 +1,11 @@
 
 import { supabase } from '../lib/supabase';
 import { Account, AccountInput, CareerLog, CareerLogInput, HealthLog, HealthLogInput } from '../types';
+import { locationService } from './locationService';
+import { scheduleService } from './scheduleService';
+import ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
+import * as XLSX from 'xlsx';
 
 /**
  * Fungsi pembantu untuk membersihkan data sebelum dikirim ke Supabase.
@@ -227,6 +232,189 @@ export const accountService = {
       throw error;
     }
     return true;
+  },
+
+  async downloadTemplate() {
+    try {
+      // Fetch data for reference sheets
+      const [locations, schedules] = await Promise.all([
+        locationService.getAll(),
+        scheduleService.getAll()
+      ]);
+
+      const workbook = new ExcelJS.Workbook();
+      const templateSheet = workbook.addWorksheet('Template');
+      const refSheet = workbook.addWorksheet('Lists');
+      refSheet.state = 'hidden';
+
+      const headers = [
+        'Nama Lengkap (*)', 'NIK KTP (*)', 'Gender (*)', 'Agama (*)', 'Tgl Lahir (YYYY-MM-DD) (*)', 
+        'Alamat (*)', 'No Telepon (*)', 'Email (*)', 'Status Nikah (*)', 'Tanggungan', 
+        'NIK Internal (*)', 'Jabatan (*)', 'Departemen/Divisi (*)', 'Lokasi Penempatan (*)', 
+        'Jenis Karyawan (*)', 'Tgl Mulai (YYYY-MM-DD) (*)', 'Tgl Akhir (YYYY-MM-DD)',
+        'Pendidikan Terakhir (*)', 'Jurusan (*)', 'Tgl Lulus (YYYY-MM-DD) (*)',
+        'Nama Kontak Darurat (*)', 'Hubungan Kontak Darurat (*)', 'No HP Kontak Darurat (*)',
+        'Pilih Jadwal Kerja (*)', 'Jatah Cuti Tahunan', 'Jatah Cuti Melahirkan', 
+        'Akumulasi Cuti (Ya/Tidak)', 'Maksimal Carry-over', 'Jatah Carry-over Saat Ini',
+        'Batasi Check-in Datang (Ya/Tidak)', 'Batasi Check-out Pulang (Ya/Tidak)', 
+        'Batasi Check-in Lembur (Ya/Tidak)', 'Batasi Check-out Lembur (Ya/Tidak)',
+        'Kode Akses (*)', 'Password (*)'
+      ];
+
+      templateSheet.addRow(headers);
+      
+      // Style headers
+      const headerRow = templateSheet.getRow(1);
+      headerRow.font = { bold: true };
+      headerRow.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFE0E0E0' }
+      };
+
+      // Mandatory columns (marked with *)
+      const mandatoryIndices = [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 18, 19, 20, 21, 22, 23, 24, 34, 35];
+      mandatoryIndices.forEach(idx => {
+        headerRow.getCell(idx).font = { color: { argb: 'FFFF0000' }, bold: true };
+      });
+
+      // Prepare lists for dropdowns
+      const genderList = ['Laki-laki', 'Perempuan'];
+      const religionList = ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Budha', 'Konghucu', 'Kepercayaan Lain'];
+      const maritalList = ['Belum Menikah', 'Menikah', 'Cerai Hidup', 'Cerai Mati'];
+      const empTypeList = ['Tetap', 'Kontrak', 'Harian', 'Magang'];
+      const yesNoList = ['Ya', 'Tidak'];
+      const locList = locations.map(l => l.name);
+      const schList = ['Fleksibel', 'Shift Dinamis', ...schedules.map(s => s.name)];
+
+      // Write lists to hidden sheet
+      refSheet.getColumn(1).values = genderList;
+      refSheet.getColumn(2).values = religionList;
+      refSheet.getColumn(3).values = maritalList;
+      refSheet.getColumn(4).values = empTypeList;
+      refSheet.getColumn(5).values = yesNoList;
+      refSheet.getColumn(6).values = locList;
+      refSheet.getColumn(7).values = schList;
+
+      // Apply Data Validations (Dropdowns)
+      for (let i = 2; i <= 201; i++) {
+        templateSheet.getCell(`C${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$A$1:$A$${genderList.length}`] };
+        templateSheet.getCell(`D${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$B$1:$B$${religionList.length}`] };
+        templateSheet.getCell(`I${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$C$1:$C$${maritalList.length}`] };
+        templateSheet.getCell(`N${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$F$1:$F$${locList.length}`] };
+        templateSheet.getCell(`O${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$D$1:$D$${empTypeList.length}`] };
+        templateSheet.getCell(`X${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$G$1:$G$${schList.length}`] };
+        templateSheet.getCell(`AA${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$E$1:$E$2`] };
+        templateSheet.getCell(`AD${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$E$1:$E$2`] };
+        templateSheet.getCell(`AE${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$E$1:$E$2`] };
+        templateSheet.getCell(`AF${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$E$1:$E$2`] };
+        templateSheet.getCell(`AG${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$E$1:$E$2`] };
+      }
+
+      templateSheet.columns.forEach(column => {
+        column.width = 22;
+      });
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      saveAs(blob, `HUREMA_Account_Template_${new Date().toISOString().split('T')[0]}.xlsx`);
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  },
+
+  async processImport(file: File, bulkFiles: Record<string, string> = {}) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const data = new Uint8Array(e.target?.result as ArrayBuffer);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+
+          const results = jsonData.map((row: any) => {
+            const getVal = (key: string) => row[key] || '';
+            const formatExcelDate = (val: any) => {
+              if (!val) return null;
+              if (typeof val === 'number') {
+                return new Date((val - 25569) * 86400 * 1000).toISOString().split('T')[0];
+              }
+              return val;
+            };
+
+            const internalNik = String(getVal('NIK Internal (*)')).trim();
+            let matchedPhotoId = null;
+            if (internalNik) {
+              const normalizedNik = internalNik.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+              const match = Object.entries(bulkFiles).find(([fileName]) => {
+                const normalizedFileName = fileName.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+                return normalizedFileName === normalizedNik || normalizedFileName.includes(normalizedNik);
+              });
+              if (match) matchedPhotoId = match[1];
+            }
+
+            const requiredFields = [
+              'Nama Lengkap (*)', 'NIK KTP (*)', 'Gender (*)', 'Agama (*)', 'Tgl Lahir (YYYY-MM-DD) (*)',
+              'Alamat (*)', 'No Telepon (*)', 'Email (*)', 'Status Nikah (*)', 'NIK Internal (*)',
+              'Jabatan (*)', 'Departemen/Divisi (*)', 'Lokasi Penempatan (*)', 'Jenis Karyawan (*)',
+              'Tgl Mulai (YYYY-MM-DD) (*)', 'Pendidikan Terakhir (*)', 'Jurusan (*)', 'Tgl Lulus (YYYY-MM-DD) (*)',
+              'Nama Kontak Darurat (*)', 'Hubungan Kontak Darurat (*)', 'No HP Kontak Darurat (*)',
+              'Pilih Jadwal Kerja (*)', 'Kode Akses (*)', 'Password (*)'
+            ];
+
+            const isValid = requiredFields.every(field => !!row[field]);
+
+            return {
+              full_name: getVal('Nama Lengkap (*)'),
+              nik_ktp: String(getVal('NIK KTP (*)')),
+              gender: getVal('Gender (*)'),
+              religion: getVal('Agama (*)'),
+              dob: formatExcelDate(row['Tgl Lahir (YYYY-MM-DD) (*)']),
+              address: getVal('Alamat (*)'),
+              phone: String(getVal('No Telepon (*)')),
+              email: getVal('Email (*)'),
+              marital_status: getVal('Status Nikah (*)'),
+              dependents_count: parseInt(getVal('Tanggungan')) || 0,
+              internal_nik: internalNik,
+              position: getVal('Jabatan (*)'),
+              grade: getVal('Departemen/Divisi (*)'),
+              location_name: getVal('Lokasi Penempatan (*)'),
+              employee_type: getVal('Jenis Karyawan (*)'),
+              start_date: formatExcelDate(row['Tgl Mulai (YYYY-MM-DD) (*)']),
+              end_date: formatExcelDate(row['Tgl Akhir (YYYY-MM-DD)']),
+              last_education: getVal('Pendidikan Terakhir (*)'),
+              major: getVal('Jurusan (*)'),
+              grad_date: formatExcelDate(row['Tgl Lulus (YYYY-MM-DD) (*)']),
+              emergency_contact_name: getVal('Nama Kontak Darurat (*)'),
+              emergency_contact_rel: getVal('Hubungan Kontak Darurat (*)'),
+              emergency_contact_phone: String(getVal('No HP Kontak Darurat (*)')),
+              schedule_name: getVal('Pilih Jadwal Kerja (*)'),
+              leave_quota: parseInt(getVal('Jatah Cuti Tahunan')) || 12,
+              maternity_leave_quota: parseInt(getVal('Jatah Cuti Melahirkan')) || 0,
+              is_leave_accumulated: getVal('Akumulasi Cuti (Ya/Tidak)') === 'Ya',
+              max_carry_over_days: parseInt(getVal('Maksimal Carry-over')) || 0,
+              carry_over_quota: parseInt(getVal('Jatah Carry-over Saat Ini')) || 0,
+              is_presence_limited_checkin: getVal('Batasi Check-in Datang (Ya/Tidak)') !== 'Tidak',
+              is_presence_limited_checkout: getVal('Batasi Check-out Pulang (Ya/Tidak)') !== 'Tidak',
+              is_presence_limited_ot_in: getVal('Batasi Check-in Lembur (Ya/Tidak)') !== 'Tidak',
+              is_presence_limited_ot_out: getVal('Batasi Check-in Lembur (Ya/Tidak)') !== 'Tidak',
+              access_code: String(getVal('Kode Akses (*)')),
+              password: String(getVal('Password (*)')),
+              photo_google_id: matchedPhotoId,
+              isValid
+            };
+          });
+          resolve(results);
+        } catch (err) { reject(err); }
+      };
+      reader.readAsArrayBuffer(file);
+    });
+  },
+
+  async commitImport(data: any[]) {
+    const validData = data.filter(d => d.isValid);
+    return this.bulkCreate(validData);
   },
 
   async bulkCreate(accounts: (AccountInput & { location_name?: string, schedule_name?: string })[]) {

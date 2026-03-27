@@ -4,7 +4,7 @@ import {
   Plus, Search, Users, Grid, List as ListIcon, 
   ArrowLeft, UserCircle, UserCheck, UserX,
   History, FileBadge, Award, Activity, ShieldAlert,
-  Download, Upload, Image as ImageIcon,
+  Download, Upload, Image as ImageIcon, FileUp,
   MapPin, Mail, Phone, Edit2, LogOut, Shield, Briefcase, Trash2
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
@@ -18,6 +18,7 @@ import { authService } from '../../services/authService';
 import { Account, AccountInput, AuthUser, SalaryScheme } from '../../types';
 import AccountForm from './AccountForm';
 import AccountDetail from './AccountDetail';
+import AccountImportModal from './AccountImportModal';
 import { CardSkeleton } from '../../components/Common/Skeleton';
 import LoadingSpinner from '../../components/Common/LoadingSpinner';
 import { googleDriveService } from '../../services/googleDriveService';
@@ -41,10 +42,10 @@ const AccountMain: React.FC<AccountMainProps> = ({ user, setUser, isSelfProfile 
   const [salaryScheme, setSalaryScheme] = useState<SalaryScheme | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'aktif' | 'non-aktif'>('aktif');
   const [showForm, setShowForm] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -823,68 +824,21 @@ const AccountMain: React.FC<AccountMainProps> = ({ user, setUser, isSelfProfile 
                   Hapus ({selectedIds.length})
                 </button>
               )}
-              <div className="flex items-center gap-1 mr-2">
-                <button 
-                  onClick={downloadTemplate}
-                  className="flex items-center gap-1.5 text-gray-500 hover:text-[#006E62] px-2 py-1.5 text-[10px] font-bold uppercase transition-colors"
-                  title="Unduh Template CSV"
-                >
-                  <Download size={14} />
-                  <span className="hidden sm:inline">Template</span>
-                </button>
-                <button 
-                  onClick={() => fileInputRef.current?.click()}
-                  className="flex items-center gap-1.5 text-gray-500 hover:text-[#006E62] px-2 py-1.5 text-[10px] font-bold uppercase transition-colors"
-                  title="Impor Akun dari CSV"
-                >
-                  <Upload size={14} />
-                  <span className="hidden sm:inline">Impor</span>
-                </button>
-                <button 
-                  onClick={() => bulkImageInputRef.current?.click()}
-                  className="flex items-center gap-1.5 text-gray-500 hover:text-[#006E62] px-2 py-1.5 text-[10px] font-bold uppercase transition-colors"
-                  title="Bulk Upload Foto/Dokumen"
-                >
-                  <ImageIcon size={14} />
-                  <span className="hidden sm:inline">Bulk Foto</span>
-                </button>
-                <input 
-                  type="file" 
-                  ref={fileInputRef} 
-                  onChange={handleImport} 
-                  accept=".xlsx,.csv" 
-                  className="hidden" 
-                />
-                <input 
-                  type="file" 
-                  ref={bulkImageInputRef} 
-                  onChange={handleBulkImageUpload} 
-                  multiple 
-                  accept="image/*,application/pdf" 
-                  className="hidden" 
-                />
-              </div>
+              
+              <button 
+                onClick={() => setShowImportModal(true)}
+                className="flex items-center gap-2 bg-white text-[#006E62] border border-[#006E62] px-4 py-2 rounded-md hover:bg-emerald-50 transition-colors shadow-sm"
+              >
+                <FileUp size={18} />
+                <span className="font-bold text-sm uppercase tracking-tighter">Impor Massal</span>
+              </button>
 
-              <div className="flex border border-gray-200 rounded-md overflow-hidden bg-white">
-                <button 
-                  onClick={() => setViewMode('grid')}
-                  className={`p-2 transition-colors ${viewMode === 'grid' ? 'bg-gray-100 text-[#006E62]' : 'text-gray-400 hover:text-gray-600'}`}
-                >
-                  <Grid size={18} />
-                </button>
-                <button 
-                  onClick={() => setViewMode('list')}
-                  className={`p-2 transition-colors ${viewMode === 'list' ? 'bg-gray-100 text-[#006E62]' : 'text-gray-400 hover:text-gray-600'}`}
-                >
-                  <ListIcon size={18} />
-                </button>
-              </div>
               <button 
                 onClick={() => { setEditingAccount(null); setShowForm(true); }}
                 className="flex items-center gap-2 bg-[#006E62] text-white px-4 py-2 rounded-md hover:bg-[#005a50] transition-colors shadow-sm"
               >
                 <Plus size={18} />
-                <span className="font-medium text-sm">Tambah Akun</span>
+                <span className="font-bold text-sm uppercase tracking-tighter">Tambah Akun</span>
               </button>
             </div>
           </div>
@@ -911,66 +865,13 @@ const AccountMain: React.FC<AccountMainProps> = ({ user, setUser, isSelfProfile 
           </div>
 
           {isLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {[1, 2, 3, 4, 5, 6].map(i => <CardSkeleton key={i} />)}
+            <div className="bg-white border border-gray-100 rounded-md p-8 flex justify-center">
+              <div className="w-8 h-8 border-4 border-[#006E62] border-t-transparent rounded-full animate-spin"></div>
             </div>
           ) : filteredAccounts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-gray-400">
               <Users size={48} strokeWidth={1} className="mb-4" />
               <p className="text-lg">Data akun {statusFilter === 'aktif' ? 'aktif' : 'non-aktif'} tidak ditemukan.</p>
-            </div>
-          ) : viewMode === 'grid' ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredAccounts.map(account => {
-                const isInactive = account.end_date && account.end_date <= today;
-                const isSelected = selectedIds.includes(account.id);
-                return (
-                  <div 
-                    key={account.id} 
-                    className={`group bg-white border p-4 rounded-md shadow-sm hover:shadow-md transition-all cursor-pointer border-l-4 relative ${isSelected ? 'border-[#006E62] bg-emerald-50/10' : 'border-gray-100 border-l-transparent'} ${isInactive && !isSelected ? 'hover:border-l-red-500' : (!isSelected ? 'hover:border-l-[#006E62]' : '')}`}
-                  >
-                    <div className="absolute top-3 right-3 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); toggleSelect(account.id); }}
-                        className={`p-1.5 rounded-full border transition-colors ${isSelected ? 'bg-[#006E62] text-white border-[#006E62]' : 'bg-white text-gray-400 border-gray-200 hover:border-[#006E62] hover:text-[#006E62]'}`}
-                      >
-                        <UserCheck size={12} />
-                      </button>
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); handleDelete(account.id); }}
-                        className="p-1.5 rounded-full bg-white text-red-400 border border-gray-200 hover:border-red-500 hover:text-red-500 transition-colors"
-                      >
-                        <Trash2 size={12} />
-                      </button>
-                    </div>
-
-                    <div onClick={() => setSelectedAccountId(account.id)}>
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-full bg-gray-100 overflow-hidden border border-gray-200 shrink-0 flex items-center justify-center">
-                          {account.photo_google_id ? (
-                            <img src={googleDriveService.getFileUrl(account.photo_google_id)} alt="" className="w-full h-full object-cover" />
-                          ) : (
-                            <UserCircle size={24} className="text-gray-400" />
-                          )}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <h3 className="font-bold text-[#006E62] group-hover:text-[#005a50] line-clamp-1 text-sm">{account.full_name}</h3>
-                          <p className="text-[10px] text-gray-400 font-bold uppercase">{account.position} • {account.internal_nik}</p>
-                        </div>
-                        {isInactive && <span className="text-[8px] font-bold px-1 py-0.5 bg-red-50 text-red-600 rounded uppercase">Exit</span>}
-                      </div>
-                      <div className="flex items-center justify-between pt-2 border-t border-gray-50">
-                         <span className="text-[10px] text-gray-500 font-medium">{(account as any).location?.name || 'Tanpa Lokasi'}</span>
-                         <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase ${
-                           isInactive ? 'bg-gray-100 text-gray-400' : (account.employee_type === 'Tetap' ? 'bg-green-50 text-green-600' : 'bg-orange-50 text-orange-600')
-                         }`}>
-                           {account.employee_type}
-                         </span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
             </div>
           ) : (
             <div className="bg-white border border-gray-100 rounded-md overflow-hidden shadow-sm overflow-x-auto">
@@ -1076,6 +977,16 @@ const AccountMain: React.FC<AccountMainProps> = ({ user, setUser, isSelfProfile 
           onClose={() => { setShowForm(false); setEditingAccount(null); }}
           onSubmit={editingAccount ? (data) => handleUpdate(editingAccount.id, data) : handleCreate}
           initialData={editingAccount || undefined}
+        />
+      )}
+
+      {showImportModal && (
+        <AccountImportModal 
+          onClose={() => setShowImportModal(false)}
+          onSuccess={() => {
+            setShowImportModal(false);
+            fetchAccounts();
+          }}
         />
       )}
     </div>
