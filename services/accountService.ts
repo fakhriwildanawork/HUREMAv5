@@ -249,40 +249,76 @@ export const accountService = {
 
       const headers = [
         'Nama Lengkap (*)', 'NIK KTP (*)', 'Gender (*)', 'Agama (*)', 'Tgl Lahir (YYYY-MM-DD) (*)', 
-        'Alamat (*)', 'No Telepon (*)', 'Email (*)', 'Status Nikah (*)', 'Tanggungan', 
+        'Alamat (*)', 'No Telepon (*)', 'Email (*)', 'Status Nikah (*)', 'Tanggungan (*)', 
         'NIK Internal (*)', 'Jabatan (*)', 'Departemen/Divisi (*)', 'Lokasi Penempatan (*)', 
-        'Jenis Karyawan (*)', 'Tgl Mulai (YYYY-MM-DD) (*)', 'Tgl Akhir (YYYY-MM-DD)',
+        'Jenis Karyawan (*)', 'Tgl Mulai (YYYY-MM-DD) (*)', 'Tgl Akhir (YYYY-MM-DD) (*)',
         'Pendidikan Terakhir (*)', 'Jurusan (*)', 'Tgl Lulus (YYYY-MM-DD) (*)',
         'Nama Kontak Darurat (*)', 'Hubungan Kontak Darurat (*)', 'No HP Kontak Darurat (*)',
-        'Pilih Jadwal Kerja (*)', 'Jatah Cuti Tahunan', 'Jatah Cuti Melahirkan', 
-        'Akumulasi Cuti (Ya/Tidak)', 'Maksimal Carry-over', 'Jatah Carry-over Saat Ini',
-        'Batasi Check-in Datang (Ya/Tidak)', 'Batasi Check-out Pulang (Ya/Tidak)', 
-        'Batasi Check-in Lembur (Ya/Tidak)', 'Batasi Check-out Lembur (Ya/Tidak)',
+        'Pilih Jadwal Kerja (*)', 'Jatah Cuti Tahunan (*)', 'Jatah Cuti Melahirkan (*)', 
+        'Akumulasi Cuti (Ya/Tidak) (*)', 'Maksimal Carry-over (*)', 'Jatah Carry-over Saat Ini (*)',
+        'Batasi Check-in Datang (Ya/Tidak) (*)', 'Batasi Check-out Pulang (Ya/Tidak) (*)', 
+        'Batasi Check-in Lembur (Ya/Tidak) (*)', 'Batasi Check-out Lembur (Ya/Tidak) (*)',
         'Kode Akses (*)', 'Password (*)'
       ];
 
       templateSheet.addRow(headers);
+
+      // Add Description Row (Row 2)
+      const descriptionRow = [
+        'Wajib diisi', 'Wajib diisi', 'Pilih dari daftar', 'Pilih dari daftar', 'Format: YYYY-MM-DD',
+        'Wajib diisi', 'Wajib diisi', 'Wajib diisi', 'Pilih dari daftar', 'Wajib diisi (angka)',
+        'Wajib diisi', 'Wajib diisi', 'Wajib diisi', 'Pilih dari daftar',
+        'Pilih dari daftar', 'Format: YYYY-MM-DD', 'Kosongkan jika karyawan Tetap',
+        'Pilih dari daftar', 'Wajib diisi', 'Format: YYYY-MM-DD',
+        'Wajib diisi', 'Wajib diisi', 'Wajib diisi',
+        'Pilih dari daftar', 'Wajib diisi (angka)', 'Khusus Perempuan (angka)',
+        'Pilih dari daftar', 'Wajib diisi (angka)', 'Wajib diisi (angka)',
+        'Pilih dari daftar', 'Pilih dari daftar',
+        'Pilih dari daftar', 'Pilih dari daftar',
+        'Wajib diisi', 'Wajib diisi'
+      ];
+      templateSheet.addRow(descriptionRow);
+
+      // Add Example Row (Row 3)
+      const exampleRow = [
+        'Contoh Nama', '1234567890123456', 'Laki-laki', 'Islam', '1990-01-01',
+        'Jl. Contoh No. 123', '08123456789', 'contoh@email.com', 'Belum Menikah', '0',
+        'EMP001', 'Staff', 'Operasional', locations[0]?.name || 'Pusat',
+        'Tetap', '2024-01-01', '',
+        'Sarjana', 'Teknik Informatika', '2012-01-01',
+        'Nama Kontak', 'Orang Tua', '08123456789',
+        'Fleksibel', '12', '0',
+        'Tidak', '0', '0',
+        'Ya', 'Ya',
+        'Ya', 'Ya',
+        'USER001', 'pass123'
+      ];
+      templateSheet.addRow(exampleRow);
       
       // Style headers
       const headerRow = templateSheet.getRow(1);
-      headerRow.font = { bold: true };
+      headerRow.font = { bold: true, color: { argb: 'FFFF0000' } };
       headerRow.fill = {
         type: 'pattern',
         pattern: 'solid',
         fgColor: { argb: 'FFE0E0E0' }
       };
 
-      // Mandatory columns (marked with *)
-      const mandatoryIndices = [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 18, 19, 20, 21, 22, 23, 24, 34, 35];
-      mandatoryIndices.forEach(idx => {
-        headerRow.getCell(idx).font = { color: { argb: 'FFFF0000' }, bold: true };
-      });
+      // Style description row
+      const descRow = templateSheet.getRow(2);
+      descRow.font = { italic: true, size: 10 };
+      descRow.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFFFF9C4' } // Light yellow
+      };
 
       // Prepare lists for dropdowns
       const genderList = ['Laki-laki', 'Perempuan'];
       const religionList = ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Budha', 'Konghucu', 'Kepercayaan Lain'];
       const maritalList = ['Belum Menikah', 'Menikah', 'Cerai Hidup', 'Cerai Mati'];
       const empTypeList = ['Tetap', 'Kontrak', 'Harian', 'Magang'];
+      const educationList = ['Tidak Sekolah', 'SD', 'SMP/Setara', 'SMA/Setara', 'Diploma 1-4', 'Sarjana', 'Profesi', 'Master', 'Doktor'];
       const yesNoList = ['Ya', 'Tidak'];
       const locList = locations.map(l => l.name);
       const schList = ['Fleksibel', 'Shift Dinamis', ...schedules.map(s => s.name)];
@@ -295,14 +331,16 @@ export const accountService = {
       refSheet.getColumn(5).values = yesNoList;
       refSheet.getColumn(6).values = locList;
       refSheet.getColumn(7).values = schList;
+      refSheet.getColumn(8).values = educationList;
 
       // Apply Data Validations (Dropdowns)
-      for (let i = 2; i <= 201; i++) {
+      for (let i = 4; i <= 203; i++) {
         templateSheet.getCell(`C${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$A$1:$A$${genderList.length}`] };
         templateSheet.getCell(`D${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$B$1:$B$${religionList.length}`] };
         templateSheet.getCell(`I${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$C$1:$C$${maritalList.length}`] };
         templateSheet.getCell(`N${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$F$1:$F$${locList.length}`] };
         templateSheet.getCell(`O${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$D$1:$D$${empTypeList.length}`] };
+        templateSheet.getCell(`R${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$H$1:$H$${educationList.length}`] };
         templateSheet.getCell(`X${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$G$1:$G$${schList.length}`] };
         templateSheet.getCell(`AA${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$E$1:$E$2`] };
         templateSheet.getCell(`AD${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$E$1:$E$2`] };
@@ -312,7 +350,7 @@ export const accountService = {
       }
 
       templateSheet.columns.forEach(column => {
-        column.width = 22;
+        column.width = 25;
       });
 
       const buffer = await workbook.xlsx.writeBuffer();
@@ -322,7 +360,8 @@ export const accountService = {
       console.error(error);
       throw error;
     }
-  },
+  }
+,
 
   async processImport(file: File, bulkFiles: Record<string, string> = {}) {
     return new Promise((resolve, reject) => {
@@ -333,78 +372,88 @@ export const accountService = {
           const workbook = XLSX.read(data, { type: 'array' });
           const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
 
-          const results = jsonData.map((row: any) => {
-            const getVal = (key: string) => row[key] || '';
-            const formatExcelDate = (val: any) => {
-              if (!val) return null;
-              if (typeof val === 'number') {
-                return new Date((val - 25569) * 86400 * 1000).toISOString().split('T')[0];
+          const results = jsonData
+            .filter((row: any) => {
+              const name = String(row['Nama Lengkap (*)'] || '').trim();
+              return name !== '' && name !== 'Contoh Nama' && name !== 'Wajib diisi';
+            })
+            .map((row: any) => {
+              const getVal = (key: string) => row[key] || '';
+              const formatExcelDate = (val: any) => {
+                if (!val) return null;
+                if (typeof val === 'number') {
+                  return new Date((val - 25569) * 86400 * 1000).toISOString().split('T')[0];
+                }
+                return val;
+              };
+
+              const internalNik = String(getVal('NIK Internal (*)')).trim();
+              let matchedPhotoId = null;
+              if (internalNik) {
+                const normalizedNik = internalNik.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+                const match = Object.entries(bulkFiles).find(([fileName]) => {
+                  const normalizedFileName = fileName.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+                  return normalizedFileName === normalizedNik || normalizedFileName.includes(normalizedNik);
+                });
+                if (match) matchedPhotoId = match[1];
               }
-              return val;
-            };
 
-            const internalNik = String(getVal('NIK Internal (*)')).trim();
-            let matchedPhotoId = null;
-            if (internalNik) {
-              const normalizedNik = internalNik.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-              const match = Object.entries(bulkFiles).find(([fileName]) => {
-                const normalizedFileName = fileName.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-                return normalizedFileName === normalizedNik || normalizedFileName.includes(normalizedNik);
-              });
-              if (match) matchedPhotoId = match[1];
-            }
+              const requiredFields = [
+                'Nama Lengkap (*)', 'NIK KTP (*)', 'Gender (*)', 'Agama (*)', 'Tgl Lahir (YYYY-MM-DD) (*)',
+                'Alamat (*)', 'No Telepon (*)', 'Email (*)', 'Status Nikah (*)', 'Tanggungan (*)',
+                'NIK Internal (*)', 'Jabatan (*)', 'Departemen/Divisi (*)', 'Lokasi Penempatan (*)',
+                'Jenis Karyawan (*)', 'Tgl Mulai (YYYY-MM-DD) (*)',
+                'Pendidikan Terakhir (*)', 'Jurusan (*)', 'Tgl Lulus (YYYY-MM-DD) (*)',
+                'Nama Kontak Darurat (*)', 'Hubungan Kontak Darurat (*)', 'No HP Kontak Darurat (*)',
+                'Pilih Jadwal Kerja (*)', 'Jatah Cuti Tahunan (*)',
+                'Akumulasi Cuti (Ya/Tidak) (*)', 'Maksimal Carry-over (*)', 'Jatah Carry-over Saat Ini (*)',
+                'Batasi Check-in Datang (Ya/Tidak) (*)', 'Batasi Check-out Pulang (Ya/Tidak) (*)',
+                'Batasi Check-in Lembur (Ya/Tidak) (*)', 'Batasi Check-out Lembur (Ya/Tidak) (*)',
+                'Kode Akses (*)', 'Password (*)'
+              ];
 
-            const requiredFields = [
-              'Nama Lengkap (*)', 'NIK KTP (*)', 'Gender (*)', 'Agama (*)', 'Tgl Lahir (YYYY-MM-DD) (*)',
-              'Alamat (*)', 'No Telepon (*)', 'Email (*)', 'Status Nikah (*)', 'NIK Internal (*)',
-              'Jabatan (*)', 'Departemen/Divisi (*)', 'Lokasi Penempatan (*)', 'Jenis Karyawan (*)',
-              'Tgl Mulai (YYYY-MM-DD) (*)', 'Pendidikan Terakhir (*)', 'Jurusan (*)', 'Tgl Lulus (YYYY-MM-DD) (*)',
-              'Nama Kontak Darurat (*)', 'Hubungan Kontak Darurat (*)', 'No HP Kontak Darurat (*)',
-              'Pilih Jadwal Kerja (*)', 'Kode Akses (*)', 'Password (*)'
-            ];
+              const isValid = requiredFields.every(field => !!row[field]);
 
-            const isValid = requiredFields.every(field => !!row[field]);
-
-            return {
-              full_name: getVal('Nama Lengkap (*)'),
-              nik_ktp: String(getVal('NIK KTP (*)')),
-              gender: getVal('Gender (*)'),
-              religion: getVal('Agama (*)'),
-              dob: formatExcelDate(row['Tgl Lahir (YYYY-MM-DD) (*)']),
-              address: getVal('Alamat (*)'),
-              phone: String(getVal('No Telepon (*)')),
-              email: getVal('Email (*)'),
-              marital_status: getVal('Status Nikah (*)'),
-              dependents_count: parseInt(getVal('Tanggungan')) || 0,
-              internal_nik: internalNik,
-              position: getVal('Jabatan (*)'),
-              grade: getVal('Departemen/Divisi (*)'),
-              location_name: getVal('Lokasi Penempatan (*)'),
-              employee_type: getVal('Jenis Karyawan (*)'),
-              start_date: formatExcelDate(row['Tgl Mulai (YYYY-MM-DD) (*)']),
-              end_date: formatExcelDate(row['Tgl Akhir (YYYY-MM-DD)']),
-              last_education: getVal('Pendidikan Terakhir (*)'),
-              major: getVal('Jurusan (*)'),
-              grad_date: formatExcelDate(row['Tgl Lulus (YYYY-MM-DD) (*)']),
-              emergency_contact_name: getVal('Nama Kontak Darurat (*)'),
-              emergency_contact_rel: getVal('Hubungan Kontak Darurat (*)'),
-              emergency_contact_phone: String(getVal('No HP Kontak Darurat (*)')),
-              schedule_name: getVal('Pilih Jadwal Kerja (*)'),
-              leave_quota: parseInt(getVal('Jatah Cuti Tahunan')) || 12,
-              maternity_leave_quota: parseInt(getVal('Jatah Cuti Melahirkan')) || 0,
-              is_leave_accumulated: getVal('Akumulasi Cuti (Ya/Tidak)') === 'Ya',
-              max_carry_over_days: parseInt(getVal('Maksimal Carry-over')) || 0,
-              carry_over_quota: parseInt(getVal('Jatah Carry-over Saat Ini')) || 0,
-              is_presence_limited_checkin: getVal('Batasi Check-in Datang (Ya/Tidak)') !== 'Tidak',
-              is_presence_limited_checkout: getVal('Batasi Check-out Pulang (Ya/Tidak)') !== 'Tidak',
-              is_presence_limited_ot_in: getVal('Batasi Check-in Lembur (Ya/Tidak)') !== 'Tidak',
-              is_presence_limited_ot_out: getVal('Batasi Check-in Lembur (Ya/Tidak)') !== 'Tidak',
-              access_code: String(getVal('Kode Akses (*)')),
-              password: String(getVal('Password (*)')),
-              photo_google_id: matchedPhotoId,
-              isValid
-            };
-          });
+              return {
+                full_name: getVal('Nama Lengkap (*)'),
+                nik_ktp: String(getVal('NIK KTP (*)')),
+                gender: getVal('Gender (*)'),
+                religion: getVal('Agama (*)'),
+                dob: formatExcelDate(row['Tgl Lahir (YYYY-MM-DD) (*)']),
+                address: getVal('Alamat (*)'),
+                phone: String(getVal('No Telepon (*)')),
+                email: getVal('Email (*)'),
+                marital_status: getVal('Status Nikah (*)'),
+                dependents_count: parseInt(getVal('Tanggungan (*)')) || 0,
+                internal_nik: internalNik,
+                position: getVal('Jabatan (*)'),
+                grade: getVal('Departemen/Divisi (*)'),
+                location_name: getVal('Lokasi Penempatan (*)'),
+                employee_type: getVal('Jenis Karyawan (*)'),
+                start_date: formatExcelDate(row['Tgl Mulai (YYYY-MM-DD) (*)']),
+                end_date: formatExcelDate(row['Tgl Akhir (YYYY-MM-DD) (*)']),
+                last_education: getVal('Pendidikan Terakhir (*)'),
+                major: getVal('Jurusan (*)'),
+                grad_date: formatExcelDate(row['Tgl Lulus (YYYY-MM-DD) (*)']),
+                emergency_contact_name: getVal('Nama Kontak Darurat (*)'),
+                emergency_contact_rel: getVal('Hubungan Kontak Darurat (*)'),
+                emergency_contact_phone: String(getVal('No HP Kontak Darurat (*)')),
+                schedule_name: getVal('Pilih Jadwal Kerja (*)'),
+                leave_quota: parseInt(getVal('Jatah Cuti Tahunan (*)')) || 12,
+                maternity_leave_quota: parseInt(getVal('Jatah Cuti Melahirkan (*)')) || 0,
+                is_leave_accumulated: getVal('Akumulasi Cuti (Ya/Tidak) (*)') === 'Ya',
+                max_carry_over_days: parseInt(getVal('Maksimal Carry-over (*)')) || 0,
+                carry_over_quota: parseInt(getVal('Jatah Carry-over Saat Ini (*)')) || 0,
+                is_presence_limited_checkin: getVal('Batasi Check-in Datang (Ya/Tidak) (*)') !== 'Tidak',
+                is_presence_limited_checkout: getVal('Batasi Check-out Pulang (Ya/Tidak) (*)') !== 'Tidak',
+                is_presence_limited_ot_in: getVal('Batasi Check-in Lembur (Ya/Tidak) (*)') !== 'Tidak',
+                is_presence_limited_ot_out: getVal('Batasi Check-out Lembur (Ya/Tidak) (*)') !== 'Tidak',
+                access_code: String(getVal('Kode Akses (*)')),
+                password: String(getVal('Password (*)')),
+                photo_google_id: matchedPhotoId,
+                isValid
+              };
+            });
           resolve(results);
         } catch (err) { reject(err); }
       };
