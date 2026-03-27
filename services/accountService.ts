@@ -249,12 +249,12 @@ export const accountService = {
 
       const headers = [
         'Nama Lengkap (*)', 'NIK KTP (*)', 'Gender (*)', 'Agama (*)', 'Tgl Lahir (YYYY-MM-DD) (*)', 
-        'Alamat (*)', 'No Telepon (*)', 'Email (*)', 'Status Nikah (*)', 'Tanggungan (*)', 
+        'Alamat (*)', 'No Telepon (*)', 'Email (*)', 'Status Nikah (*)', 'Tanggungan', 
         'NIK Internal (*)', 'Jabatan (*)', 'Departemen/Divisi (*)', 'Lokasi Penempatan (*)', 
-        'Jenis Karyawan (*)', 'Tgl Mulai (YYYY-MM-DD) (*)', 'Tgl Akhir (YYYY-MM-DD) (*)',
-        'Pendidikan Terakhir (*)', 'Jurusan (*)', 'Tgl Lulus (YYYY-MM-DD) (*)',
-        'Nama Kontak Darurat (*)', 'Hubungan Kontak Darurat (*)', 'No HP Kontak Darurat (*)',
-        'Pilih Jadwal Kerja (*)', 'Jatah Cuti Tahunan (*)', 'Jatah Cuti Melahirkan (*)', 
+        'Jenis Karyawan (*)', 'Tgl Mulai (YYYY-MM-DD) (*)', 'Tgl Akhir (YYYY-MM-DD)',
+        'Pendidikan Terakhir (*)', 'Jurusan', 'Tgl Lulus (YYYY-MM-DD)',
+        'Nama Kontak Darurat', 'Hubungan Kontak Darurat', 'No HP Kontak Darurat',
+        'Pilih Jadwal Kerja (*)', 'Jatah Cuti Tahunan (*)', 'Jatah Cuti Melahirkan', 
         'Akumulasi Cuti (Ya/Tidak) (*)', 'Maksimal Carry-over (*)', 'Jatah Carry-over Saat Ini (*)',
         'Batasi Check-in Datang (Ya/Tidak) (*)', 'Batasi Check-out Pulang (Ya/Tidak) (*)', 
         'Batasi Check-in Lembur (Ya/Tidak) (*)', 'Batasi Check-out Lembur (Ya/Tidak) (*)',
@@ -266,11 +266,11 @@ export const accountService = {
       // Add Description Row (Row 2)
       const descriptionRow = [
         'Wajib diisi', 'Wajib diisi', 'Pilih dari daftar', 'Pilih dari daftar', 'Format: YYYY-MM-DD',
-        'Wajib diisi', 'Wajib diisi', 'Wajib diisi', 'Pilih dari daftar', 'Wajib diisi (angka)',
+        'Wajib diisi', 'Wajib diisi', 'Wajib diisi', 'Pilih dari daftar', 'Opsional (angka)',
         'Wajib diisi', 'Wajib diisi', 'Wajib diisi', 'Pilih dari daftar',
         'Pilih dari daftar', 'Format: YYYY-MM-DD', 'Kosongkan jika karyawan Tetap',
-        'Pilih dari daftar', 'Wajib diisi', 'Format: YYYY-MM-DD',
-        'Wajib diisi', 'Wajib diisi', 'Wajib diisi',
+        'Pilih dari daftar', 'Opsional', 'Format: YYYY-MM-DD (Opsional)',
+        'Opsional', 'Opsional', 'Opsional',
         'Pilih dari daftar', 'Wajib diisi (angka)', 'Khusus Perempuan (angka)',
         'Pilih dari daftar', 'Wajib diisi (angka)', 'Wajib diisi (angka)',
         'Pilih dari daftar', 'Pilih dari daftar',
@@ -297,12 +297,18 @@ export const accountService = {
       
       // Style headers
       const headerRow = templateSheet.getRow(1);
-      headerRow.font = { bold: true, color: { argb: 'FFFF0000' } };
-      headerRow.fill = {
-        type: 'pattern',
-        pattern: 'solid',
-        fgColor: { argb: 'FFE0E0E0' }
-      };
+      headerRow.eachCell((cell) => {
+        const isMandatory = cell.value?.toString().includes('(*)');
+        cell.font = { 
+          bold: true, 
+          color: { argb: isMandatory ? 'FFFF0000' : 'FF000000' } 
+        };
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFE0E0E0' }
+        };
+      });
 
       // Style description row
       const descRow = templateSheet.getRow(2);
@@ -400,11 +406,10 @@ export const accountService = {
 
               const requiredFields = [
                 'Nama Lengkap (*)', 'NIK KTP (*)', 'Gender (*)', 'Agama (*)', 'Tgl Lahir (YYYY-MM-DD) (*)',
-                'Alamat (*)', 'No Telepon (*)', 'Email (*)', 'Status Nikah (*)', 'Tanggungan (*)',
+                'Alamat (*)', 'No Telepon (*)', 'Email (*)', 'Status Nikah (*)',
                 'NIK Internal (*)', 'Jabatan (*)', 'Departemen/Divisi (*)', 'Lokasi Penempatan (*)',
                 'Jenis Karyawan (*)', 'Tgl Mulai (YYYY-MM-DD) (*)',
-                'Pendidikan Terakhir (*)', 'Jurusan (*)', 'Tgl Lulus (YYYY-MM-DD) (*)',
-                'Nama Kontak Darurat (*)', 'Hubungan Kontak Darurat (*)', 'No HP Kontak Darurat (*)',
+                'Pendidikan Terakhir (*)',
                 'Pilih Jadwal Kerja (*)', 'Jatah Cuti Tahunan (*)',
                 'Akumulasi Cuti (Ya/Tidak) (*)', 'Maksimal Carry-over (*)', 'Jatah Carry-over Saat Ini (*)',
                 'Batasi Check-in Datang (Ya/Tidak) (*)', 'Batasi Check-out Pulang (Ya/Tidak) (*)',
@@ -424,20 +429,20 @@ export const accountService = {
                 phone: String(getVal('No Telepon (*)')),
                 email: getVal('Email (*)'),
                 marital_status: getVal('Status Nikah (*)'),
-                dependents_count: parseInt(getVal('Tanggungan (*)')) || 0,
+                dependents_count: parseInt(getVal('Tanggungan')) || 0,
                 internal_nik: internalNik,
                 position: getVal('Jabatan (*)'),
                 grade: getVal('Departemen/Divisi (*)'),
                 location_name: getVal('Lokasi Penempatan (*)'),
                 employee_type: getVal('Jenis Karyawan (*)'),
                 start_date: formatExcelDate(row['Tgl Mulai (YYYY-MM-DD) (*)']),
-                end_date: formatExcelDate(row['Tgl Akhir (YYYY-MM-DD) (*)']),
+                end_date: formatExcelDate(row['Tgl Akhir (YYYY-MM-DD)']),
                 last_education: getVal('Pendidikan Terakhir (*)'),
-                major: getVal('Jurusan (*)'),
-                grad_date: formatExcelDate(row['Tgl Lulus (YYYY-MM-DD) (*)']),
-                emergency_contact_name: getVal('Nama Kontak Darurat (*)'),
-                emergency_contact_rel: getVal('Hubungan Kontak Darurat (*)'),
-                emergency_contact_phone: String(getVal('No HP Kontak Darurat (*)')),
+                major: getVal('Jurusan'),
+                grad_date: formatExcelDate(row['Tgl Lulus (YYYY-MM-DD)']),
+                emergency_contact_name: getVal('Nama Kontak Darurat'),
+                emergency_contact_rel: getVal('Hubungan Kontak Darurat'),
+                emergency_contact_phone: String(getVal('No HP Kontak Darurat')),
                 schedule_name: getVal('Pilih Jadwal Kerja (*)'),
                 leave_quota: parseInt(getVal('Jatah Cuti Tahunan (*)')) || 12,
                 maternity_leave_quota: parseInt(getVal('Jatah Cuti Melahirkan (*)')) || 0,

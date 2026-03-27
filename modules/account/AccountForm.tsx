@@ -534,8 +534,8 @@ const AccountForm: React.FC<AccountFormProps> = ({ onClose, onSubmit, initialDat
                         </select>
                       </div>
                       <div className="space-y-1">
-                        <Label htmlFor="major" required>Jurusan</Label>
-                        <input id="major" name="major" value={formData.major} onChange={handleChange} placeholder="cth: Teknik Sipil" className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-[#006E62] outline-none" required />
+                        <Label htmlFor="major">Jurusan</Label>
+                        <input id="major" name="major" value={formData.major} onChange={handleChange} placeholder="cth: Teknik Sipil" className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-[#006E62] outline-none" />
                       </div>
                     </div>
                     <div className="grid grid-cols-1 gap-3">
