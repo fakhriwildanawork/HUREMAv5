@@ -273,6 +273,7 @@ export const accountService = {
         'Alamat (*)', 'No Telepon (*)', 'Email (*)', 'Status Nikah (*)', 'Tanggungan', 
         'NIK Internal (*)', 'Jabatan (*)', 'Departemen/Divisi (*)', 'Lokasi Penempatan (*)', 
         'Jenis Karyawan (*)', 'Tgl Mulai (YYYY-MM-DD) (*)', 'Tgl Akhir (YYYY-MM-DD)',
+        'Nomor Kontrak', 'Jenis Kontrak', 'Mulai Kontrak (YYYY-MM-DD)', 'Akhir Kontrak (YYYY-MM-DD)',
         'Pendidikan Terakhir (*)', 'Jurusan', 'Tgl Lulus (YYYY-MM-DD)',
         'Nama Kontak Darurat', 'Hubungan Kontak Darurat', 'No HP Kontak Darurat',
         'Pilih Jadwal Kerja (*)', 'Jatah Cuti Tahunan (*)', 'Jatah Cuti Melahirkan', 
@@ -290,6 +291,7 @@ export const accountService = {
         'Wajib diisi', 'Wajib diisi', 'Wajib diisi', 'Pilih dari daftar', 'Opsional (angka)',
         'Wajib diisi', 'Wajib diisi', 'Wajib diisi', 'Pilih dari daftar',
         'Pilih dari daftar', 'Format: YYYY-MM-DD', 'Kosongkan jika karyawan Tetap',
+        'Opsional', 'Pilih dari daftar', 'Format: YYYY-MM-DD (Opsional)', 'Format: YYYY-MM-DD (Opsional)',
         'Pilih dari daftar', 'Opsional', 'Format: YYYY-MM-DD (Opsional)',
         'Opsional', 'Opsional', 'Opsional',
         'Pilih dari daftar', 'Wajib diisi (angka)', 'Khusus Perempuan (angka)',
@@ -306,6 +308,7 @@ export const accountService = {
         'Jl. Contoh No. 123', '08123456789', 'contoh@email.com', 'Belum Menikah', '0',
         'EMP001', 'Staff', 'Operasional', locations[0]?.name || 'Pusat',
         'Tetap', '2024-01-01', '',
+        'KTR/001/2024', 'PKWT', '2024-01-01', '2025-01-01',
         'Sarjana', 'Teknik Informatika', '2012-01-01',
         'Nama Kontak', 'Orang Tua', '08123456789',
         'Fleksibel', '12', '0',
@@ -345,6 +348,7 @@ export const accountService = {
       const religionList = ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Budha', 'Konghucu', 'Kepercayaan Lain'];
       const maritalList = ['Belum Menikah', 'Menikah', 'Cerai Hidup', 'Cerai Mati'];
       const empTypeList = ['Tetap', 'Kontrak', 'Harian', 'Magang'];
+      const contractTypeList = ['PKWT', 'PKWTT', 'Magang', 'Harian'];
       const educationList = ['Tidak Sekolah', 'SD', 'SMP/Setara', 'SMA/Setara', 'Diploma 1-4', 'Sarjana', 'Profesi', 'Master', 'Doktor'];
       const yesNoList = ['Ya', 'Tidak'];
       const locList = locations.map(l => l.name);
@@ -359,6 +363,7 @@ export const accountService = {
       refSheet.getColumn(6).values = locList;
       refSheet.getColumn(7).values = schList;
       refSheet.getColumn(8).values = educationList;
+      refSheet.getColumn(9).values = contractTypeList;
 
       // Apply Data Validations (Dropdowns)
       for (let i = 4; i <= 203; i++) {
@@ -367,13 +372,19 @@ export const accountService = {
         templateSheet.getCell(`I${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$C$1:$C$${maritalList.length}`] };
         templateSheet.getCell(`N${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$F$1:$F$${locList.length}`] };
         templateSheet.getCell(`O${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$D$1:$D$${empTypeList.length}`] };
-        templateSheet.getCell(`R${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$H$1:$H$${educationList.length}`] };
-        templateSheet.getCell(`X${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$G$1:$G$${schList.length}`] };
-        templateSheet.getCell(`AA${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$E$1:$E$2`] };
-        templateSheet.getCell(`AD${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$E$1:$E$2`] };
+        // Jenis Kontrak (Col 19 - S)
+        templateSheet.getCell(`S${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$I$1:$I$${contractTypeList.length}`] };
+        // Pendidikan Terakhir (Col 22 - V)
+        templateSheet.getCell(`V${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$H$1:$H$${educationList.length}`] };
+        // Pilih Jadwal Kerja (Col 28 - AB)
+        templateSheet.getCell(`AB${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$G$1:$G$${schList.length}`] };
+        // Akumulasi Cuti (Col 31 - AE)
         templateSheet.getCell(`AE${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$E$1:$E$2`] };
-        templateSheet.getCell(`AF${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$E$1:$E$2`] };
-        templateSheet.getCell(`AG${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$E$1:$E$2`] };
+        // Radius Limits (Col 34-37 - AH-AK)
+        templateSheet.getCell(`AH${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$E$1:$E$2`] };
+        templateSheet.getCell(`AI${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$E$1:$E$2`] };
+        templateSheet.getCell(`AJ${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$E$1:$E$2`] };
+        templateSheet.getCell(`AK${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$E$1:$E$2`] };
       }
 
       templateSheet.columns.forEach(column => {
