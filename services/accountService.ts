@@ -29,7 +29,10 @@ const normalizeOption = (val: string, options: string[]) => {
  */
 const sanitizePayload = (payload: any) => {
   const sanitized: any = {};
+  const excludedKeys = ['errorMsg', 'isValid'];
+  
   Object.keys(payload).forEach(key => {
+    if (excludedKeys.includes(key)) return;
     if (payload[key] === undefined) return;
     sanitized[key] = payload[key] === '' ? null : payload[key];
   });
