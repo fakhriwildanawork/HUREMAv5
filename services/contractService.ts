@@ -51,11 +51,8 @@ export const contractService = {
     
     if (error) throw error;
 
-    // Sinkronisasi: Update profil utama karyawan
-    await accountService.update(input.account_id, {
-      start_date: input.start_date,
-      end_date: input.end_date || null
-    });
+    // Sinkronisasi: Update end_date di profil utama karyawan berdasarkan kontrak terbaru
+    await this.syncAccountEndDate(input.account_id);
 
     return data[0] as AccountContract;
   },
@@ -70,19 +67,23 @@ export const contractService = {
     
     if (error) throw error;
 
-    if (input.account_id) {
-       await accountService.update(input.account_id, {
-         start_date: input.start_date || undefined,
-         end_date: input.end_date || null
-       });
+    // Ambil account_id jika tidak ada di input
+    let accountId = input.account_id;
+    if (!accountId) {
+      accountId = data[0].account_id;
+    }
+
+    if (accountId) {
+       await this.syncAccountEndDate(accountId);
     }
 
     return data[0] as AccountContract;
   },
 
   async delete(id: string) {
-    // 1. Ambil ID file
-    const { data } = await supabase.from('account_contracts').select('file_id').eq('id', id).single();
+    // 1. Ambil data kontrak untuk mendapatkan account_id dan file_id
+    const { data } = await supabase.from('account_contracts').select('account_id, file_id').eq('id', id).single();
+    const accountId = data?.account_id;
     
     // 2. Hapus file dari Drive
     if (data?.file_id) {
@@ -96,7 +97,37 @@ export const contractService = {
       .delete()
       .eq('id', id);
     if (error) throw error;
+
+    // 4. Sinkronisasi
+    if (accountId) {
+      await this.syncAccountEndDate(accountId);
+    }
+
     return true;
+  },
+
+  async syncAccountEndDate(accountId: string) {
+    // 1. Ambil semua kontrak untuk akun ini, urutkan berdasarkan start_date terbaru
+    const { data: contracts, error } = await supabase
+      .from('account_contracts')
+      .select('end_date, contract_type')
+      .eq('account_id', accountId)
+      .order('start_date', { ascending: false });
+
+    if (error) throw error;
+
+    // 2. Ambil kontrak terbaru
+    const latestContract = contracts?.[0];
+
+    // 3. Update end_date di tabel accounts
+    // Jika kontrak terbaru adalah PKWTT atau tidak punya end_date, maka end_date di accounts adalah null
+    const newEndDate = (latestContract?.contract_type === 'PKWTT' || !latestContract?.end_date) 
+      ? null 
+      : latestContract.end_date;
+
+    await accountService.update(accountId, {
+      end_date: newEndDate
+    });
   },
 
   async bulkDelete(ids: string[]) {

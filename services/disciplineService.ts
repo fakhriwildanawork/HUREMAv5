@@ -2,6 +2,7 @@ import { supabase } from '../lib/supabase';
 import { WarningLog, WarningLogExtended, WarningLogInput, TerminationLog, TerminationLogExtended, TerminationLogInput } from '../types';
 import { accountService } from './accountService';
 import { financeService } from './financeService';
+import { contractService } from './contractService';
 import ExcelJS from 'exceljs';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
@@ -164,10 +165,8 @@ export const disciplineService = {
     const { error } = await supabase.from('account_termination_logs').delete().eq('id', id);
     if (error) throw error;
 
-    // Aktifkan kembali akun dengan me-nullkan end_date
-    await accountService.update(accountId, {
-      end_date: null
-    });
+    // Aktifkan kembali akun dengan mensinkronisasi end_date dari kontrak terakhir
+    await contractService.syncAccountEndDate(accountId);
     return true;
   },
 

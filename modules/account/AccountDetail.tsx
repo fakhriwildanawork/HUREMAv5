@@ -376,8 +376,8 @@ const AccountDetail: React.FC<AccountDetailProps> = ({ id, onClose, onEdit, onDe
              <DataRow label="Golongan" value={currentGrade} />
              <DataRow label="NIK Internal" value={account.internal_nik} />
              <DataRow label="Jadwal" value={account.schedule_type} />
-             <DataRow label="Mulai Kerja" value={formatDate(account.start_date || '')} />
-             <DataRow label="Akhir Kerja" value={account.end_date ? formatDate(account.end_date) : 'Aktif'} />
+             <DataRow label="Tanggal Bergabung" value={formatDate(account.start_date || '')} />
+             <DataRow label="Estimasi Berakhir" value={account.end_date ? formatDate(account.end_date) : 'Aktif'} />
           </div>
         </DetailSection>
 

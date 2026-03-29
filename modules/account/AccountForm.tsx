@@ -503,11 +503,11 @@ const AccountForm: React.FC<AccountFormProps> = ({ onClose, onSubmit, initialDat
                         </div>
                         <div className="grid grid-cols-2 gap-2">
                           <div className="space-y-1">
-                            <Label htmlFor="start_date" required>Tgl Mulai</Label>
+                            <Label htmlFor="start_date" required>Tanggal Bergabung</Label>
                             <input id="start_date" type="date" name="start_date" value={formData.start_date} onChange={handleChange} className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-[#006E62] outline-none" required />
                           </div>
                           <div className="space-y-1">
-                            <Label htmlFor="end_date">Tgl Akhir</Label>
+                            <Label htmlFor="end_date">Tanggal Berakhir</Label>
                             <input 
                               id="end_date"
                               type="date" 
