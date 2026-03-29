@@ -36,6 +36,7 @@ interface AccountMainProps {
   isSelfProfile?: boolean;
 }
 
+
 const AccountMain: React.FC<AccountMainProps> = ({ user, setUser, isSelfProfile = false }) => {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [selfAccount, setSelfAccount] = useState<Account | null>(null);
