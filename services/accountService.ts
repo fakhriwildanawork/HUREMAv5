@@ -442,6 +442,14 @@ export const accountService = {
               // Pre-validation for Location and Schedule
               let errorMsg = '';
               
+              // Check for missing required fields
+              const missingFields = requiredFields.filter(field => !row[field]);
+              if (missingFields.length > 0) {
+                // Clean up field names for display (remove (*) and simplify)
+                const cleanNames = missingFields.map(f => f.replace(' (*)', '').replace(' (Ya/Tidak)', '').replace(' (YYYY-MM-DD)', ''));
+                errorMsg = `Kolom wajib belum lengkap: [${cleanNames.join(', ')}]`;
+              }
+              
               // Normalize Dropdown Values
               const gender = normalizeOption(getVal('Gender (*)'), VALID_OPTIONS.gender);
               const religion = normalizeOption(getVal('Agama (*)'), VALID_OPTIONS.religion);

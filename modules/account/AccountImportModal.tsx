@@ -182,7 +182,6 @@ const AccountImportModal: React.FC<AccountImportModalProps> = ({ onClose, onSucc
                 </div>
                 <div className="text-center max-w-md">
                   <h4 className="text-lg font-bold text-gray-800">1. Unggah Excel Akun</h4>
-                  <p className="text-xs text-gray-500 mt-2">Gunakan template resmi HUREMA. Sistem akan membuat akun baru, log karir awal, log kesehatan awal, dan kontrak kerja awal secara otomatis.</p>
                 </div>
 
                 <div className="flex items-center gap-3 mt-6 w-full max-w-md">
@@ -196,7 +195,14 @@ const AccountImportModal: React.FC<AccountImportModalProps> = ({ onClose, onSucc
                   <label className="flex-1 flex items-center justify-center gap-2 bg-[#006E62] text-white px-4 py-3 rounded-md hover:bg-[#005a50] transition-colors shadow-md text-sm font-bold uppercase tracking-tighter cursor-pointer">
                     {isProcessing ? <Loader2 size={18} className="animate-spin" /> : <FileUp size={18} />}
                     {isProcessing ? 'Memproses...' : previewData.length > 0 ? 'Ganti Excel' : 'Unggah Excel'}
-                    <input type="file" className="hidden" accept=".xlsx" onChange={handleFileChange} disabled={isProcessing} />
+                    <input 
+                      type="file" 
+                      className="hidden" 
+                      accept=".xlsx" 
+                      onChange={handleFileChange} 
+                      onClick={(e) => (e.target as HTMLInputElement).value = ''}
+                      disabled={isProcessing} 
+                    />
                   </label>
                 </div>
               </div>
@@ -346,7 +352,7 @@ const AccountImportModal: React.FC<AccountImportModalProps> = ({ onClose, onSucc
               disabled={previewData.length === 0 || previewData.some(d => !d.isValid)}
               className="flex items-center gap-2 bg-[#006E62] text-white px-8 py-2 rounded shadow-md hover:bg-[#005a50] transition-all text-xs font-bold uppercase disabled:opacity-50"
             >
-              Lanjut ke Foto Profil
+              Lanjut
             </button>
           ) : (
             <div className="flex gap-3">
