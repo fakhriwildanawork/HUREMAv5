@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, FileUp, Download, CheckCircle, AlertTriangle, Save, Loader2, Paperclip, Upload, User } from 'lucide-react';
+import { X, FileUp, Download, CheckCircle, AlertTriangle, Save, Loader2, Paperclip, Upload, User, FileBadge } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { accountService } from '../../services/accountService';
 import { googleDriveService } from '../../services/googleDriveService';
@@ -10,7 +10,7 @@ interface AccountImportModalProps {
 }
 
 const AccountImportModal: React.FC<AccountImportModalProps> = ({ onClose, onSuccess }) => {
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [previewData, setPreviewData] = useState<any[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -198,7 +198,7 @@ const AccountImportModal: React.FC<AccountImportModalProps> = ({ onClose, onSucc
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
           <div>
             <h3 className="text-base font-bold text-[#006E62]">Impor Massal Akun Karyawan</h3>
-            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Tahap {step}: {step === 1 ? 'Unggah File & Pratinjau' : 'Unggah Foto & Dokumen Pendukung'}</p>
+            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Tahap {step}: {step === 1 ? 'Unggah File & Pratinjau' : step === 2 ? 'Unggah Foto Profil' : 'Unggah Dokumen Pendukung'}</p>
           </div>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
             <X size={20} />
@@ -293,26 +293,15 @@ const AccountImportModal: React.FC<AccountImportModalProps> = ({ onClose, onSucc
                 </div>
               )}
             </div>
-          ) : (
+          ) : step === 2 ? (
             <div className="space-y-6">
               <div className="flex flex-col items-center py-6 border-b border-gray-50">
                 <div className="w-16 h-16 bg-emerald-50 text-[#006E62] rounded-full flex items-center justify-center mb-4">
                   <User size={32} />
                 </div>
                 <div className="text-center max-w-md">
-                  <h4 className="text-lg font-bold text-gray-800">2. Unggah Foto & Dokumen Pendukung (Opsional)</h4>
-                  <p className="text-xs text-gray-500 mt-2">Unggah file foto dan dokumen karyawan. Sistem akan mencocokkan nama file dengan NIK Internal secara otomatis berdasarkan akhiran nama file.</p>
-                </div>
-
-                <div className="mt-4 bg-blue-50 p-3 rounded-md border border-blue-100 w-full max-w-2xl">
-                  <p className="text-[10px] font-bold text-blue-800 uppercase mb-2">Aturan Penamaan File:</p>
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-[9px] text-blue-700">
-                    <div><span className="font-bold">Foto:</span> NIK_photo</div>
-                    <div><span className="font-bold">KTP:</span> NIK_ktp</div>
-                    <div><span className="font-bold">SK:</span> NIK_sk</div>
-                    <div><span className="font-bold">Kontrak:</span> NIK_contract</div>
-                    <div><span className="font-bold">Ijazah:</span> NIK_diploma</div>
-                  </div>
+                  <h4 className="text-lg font-bold text-gray-800">2. Unggah Foto Profil (Opsional)</h4>
+                  <p className="text-xs text-gray-500 mt-2">Unggah file foto karyawan. Sistem akan mencocokkan nama file dengan NIK Internal di Excel secara otomatis.</p>
                 </div>
 
                 <div className="mt-6 w-full max-w-md">
@@ -326,12 +315,101 @@ const AccountImportModal: React.FC<AccountImportModalProps> = ({ onClose, onSucc
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="md:col-span-1 space-y-3">
-                  <h5 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Foto Terunggah ({fileList.length})</h5>
+                  <h5 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Foto Terunggah ({fileList.filter(f => f.name.toLowerCase().includes('photo') || !f.name.includes('_')).length})</h5>
                   <div className="bg-gray-50 rounded-md border border-gray-100 p-2 max-h-[300px] overflow-y-auto space-y-1">
                     {fileList.length === 0 ? (
                       <p className="text-[10px] text-gray-400 text-center py-4 italic">Belum ada foto</p>
                     ) : (
-                      fileList.map((file, idx) => (
+                      fileList.filter(f => f.name.toLowerCase().includes('photo') || !f.name.includes('_')).map((file, idx) => (
+                        <div key={idx} className="flex items-center justify-between bg-white p-2 rounded border border-gray-100 group">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Paperclip size={12} className="text-[#006E62] shrink-0" />
+                            <span className="text-[10px] font-medium text-gray-600 truncate">{file.name}</span>
+                          </div>
+                          <button 
+                            onClick={() => handleDeleteFile(file.name)}
+                            className="text-red-400 hover:text-red-600 p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X size={12} />
+                          </button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                <div className="md:col-span-2 space-y-3">
+                  <h5 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status Pencocokan Foto</h5>
+                  <div className="border border-gray-100 rounded overflow-hidden">
+                    <table className="w-full text-left text-[10px]">
+                      <thead className="bg-gray-50 font-bold text-gray-500 uppercase">
+                        <tr>
+                          <th className="px-3 py-2">Nama Karyawan</th>
+                          <th className="px-3 py-2">NIK</th>
+                          <th className="px-3 py-2 text-center">Status Foto</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-50">
+                        {previewData.map((row, idx) => (
+                          <tr key={idx}>
+                            <td className="px-3 py-2 font-medium">{row.full_name}</td>
+                            <td className="px-3 py-2 font-mono">{row.internal_nik}</td>
+                            <td className="px-3 py-2 text-center">
+                              {row.photo_google_id ? <CheckCircle size={14} className="text-emerald-500 mx-auto" /> : <X size={14} className="text-gray-300 mx-auto" />}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <div className="flex flex-col items-center py-6 border-b border-gray-50">
+                <div className="w-16 h-16 bg-emerald-50 text-[#006E62] rounded-full flex items-center justify-center mb-4">
+                  <FileBadge size={32} />
+                </div>
+                <div className="text-center max-w-md">
+                  <h4 className="text-lg font-bold text-gray-800">3. Unggah Dokumen Pendukung (Opsional)</h4>
+                  <p className="text-xs text-gray-500 mt-2">Unggah file dokumen karyawan (KTP, SK, Kontrak, Ijazah). Sistem akan mencocokkan nama file dengan NIK Internal secara otomatis berdasarkan akhiran nama file.</p>
+                </div>
+
+                <div className="mt-4 bg-blue-50 p-3 rounded-md border border-blue-100 w-full max-w-2xl">
+                  <p className="text-[10px] font-bold text-blue-800 uppercase mb-2">Aturan Penamaan File:</p>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-[9px] text-blue-700">
+                    <div><span className="font-bold">KTP:</span> NIK_ktp</div>
+                    <div><span className="font-bold">SK:</span> NIK_sk</div>
+                    <div><span className="font-bold">Kontrak:</span> NIK_contract</div>
+                    <div><span className="font-bold">Ijazah:</span> NIK_diploma</div>
+                  </div>
+                </div>
+
+                <div className="mt-6 w-full max-w-md">
+                  <label className="flex items-center justify-center gap-2 border-2 border-dashed border-gray-200 px-4 py-6 rounded-md hover:bg-gray-50 hover:border-[#006E62] transition-all text-sm font-bold text-gray-400 uppercase tracking-tighter cursor-pointer">
+                    {isUploadingAttachments ? <Loader2 size={24} className="animate-spin text-[#006E62]" /> : <Upload size={24} />}
+                    {isUploadingAttachments ? 'Sedang Mengunggah...' : 'Klik atau Seret Dokumen ke Sini'}
+                    <input 
+                      type="file" 
+                      className="hidden" 
+                      accept="image/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" 
+                      multiple 
+                      onChange={handleBulkFileUpload} 
+                      disabled={isUploadingAttachments} 
+                    />
+                  </label>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="md:col-span-1 space-y-3">
+                  <h5 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Dokumen Terunggah ({fileList.filter(f => f.name.includes('_') && !f.name.toLowerCase().includes('photo')).length})</h5>
+                  <div className="bg-gray-50 rounded-md border border-gray-100 p-2 max-h-[300px] overflow-y-auto space-y-1">
+                    {fileList.filter(f => f.name.includes('_') && !f.name.toLowerCase().includes('photo')).length === 0 ? (
+                      <p className="text-[10px] text-gray-400 text-center py-4 italic">Belum ada dokumen</p>
+                    ) : (
+                      fileList.filter(f => f.name.includes('_') && !f.name.toLowerCase().includes('photo')).map((file, idx) => (
                         <div key={idx} className="flex items-center justify-between bg-white p-2 rounded border border-gray-100 group">
                           <div className="flex items-center gap-2 min-w-0">
                             <Paperclip size={12} className="text-[#006E62] shrink-0" />
@@ -357,7 +435,6 @@ const AccountImportModal: React.FC<AccountImportModalProps> = ({ onClose, onSucc
                         <tr>
                           <th className="px-3 py-2">Nama Karyawan</th>
                           <th className="px-3 py-2">NIK</th>
-                          <th className="px-3 py-2 text-center">Foto</th>
                           <th className="px-3 py-2 text-center">KTP</th>
                           <th className="px-3 py-2 text-center">SK</th>
                           <th className="px-3 py-2 text-center">Kontrak</th>
@@ -369,9 +446,6 @@ const AccountImportModal: React.FC<AccountImportModalProps> = ({ onClose, onSucc
                           <tr key={idx}>
                             <td className="px-3 py-2 font-medium">{row.full_name}</td>
                             <td className="px-3 py-2 font-mono">{row.internal_nik}</td>
-                            <td className="px-3 py-2 text-center">
-                              {row.photo_google_id ? <CheckCircle size={14} className="text-emerald-500 mx-auto" /> : <X size={14} className="text-gray-300 mx-auto" />}
-                            </td>
                             <td className="px-3 py-2 text-center">
                               {row.ktp_google_id ? <CheckCircle size={14} className="text-emerald-500 mx-auto" /> : <X size={14} className="text-gray-300 mx-auto" />}
                             </td>
@@ -405,10 +479,25 @@ const AccountImportModal: React.FC<AccountImportModalProps> = ({ onClose, onSucc
             >
               Lanjut
             </button>
-          ) : (
+          ) : step === 2 ? (
             <div className="flex gap-3">
               <button 
                 onClick={() => setStep(1)}
+                className="px-4 py-2 text-xs font-bold text-[#006E62] uppercase border border-[#006E62] rounded"
+              >
+                Kembali
+              </button>
+              <button 
+                onClick={() => setStep(3)}
+                className="flex items-center gap-2 bg-[#006E62] text-white px-8 py-2 rounded shadow-md hover:bg-[#005a50] transition-all text-xs font-bold uppercase disabled:opacity-50"
+              >
+                Lanjut
+              </button>
+            </div>
+          ) : (
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setStep(2)}
                 className="px-4 py-2 text-xs font-bold text-[#006E62] uppercase border border-[#006E62] rounded"
               >
                 Kembali
