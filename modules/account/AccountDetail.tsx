@@ -689,21 +689,58 @@ const AccountDetail: React.FC<AccountDetailProps> = ({ id, onClose, onEdit, onDe
               )}
               {!isReadOnly && (
                 <button 
-                  onClick={async (e) => {
-                    e.stopPropagation();
-                    const res = await Swal.fire({ title: 'Batalkan Pemberhentian?', text: 'Akun akan diaktifkan kembali.', icon: 'question', showCancelButton: true, confirmButtonColor: '#006E62' });
-                    if (res.isConfirmed) {
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      
                       setIsSaving(true);
-                      if (termination) {
-                        await disciplineService.deleteTermination(termination.id, id);
-                      } else {
-                        await accountService.update(id, { end_date: null });
-                      }
-                      setTermination(null);
-                      setAccount(prev => prev ? { ...prev, end_date: null } : null);
+                      // Cek real-time apakah kontrak terakhir sudah expired dari database
+                      const latestContract = await contractService.getLatestContract(id);
                       setIsSaving(false);
-                    }
-                  }}
+
+                      const isContractExpired = latestContract && 
+                                               latestContract.contract_type !== 'PKWTT' && 
+                                               latestContract.end_date && 
+                                               latestContract.end_date < today;
+
+                      if (isContractExpired) {
+                        Swal.fire({
+                          title: 'Kontrak Berakhir',
+                          text: 'Kontrak karyawan ini telah berakhir. Silakan perbarui/tambah log kontrak kerja baru untuk mengaktifkan kembali karyawan ini.',
+                          icon: 'warning',
+                          confirmButtonColor: '#006E62'
+                        });
+                        return;
+                      }
+
+                      const res = await Swal.fire({ 
+                        title: 'Batalkan Pemberhentian?', 
+                        text: 'Akun akan diaktifkan kembali.', 
+                        icon: 'question', 
+                        showCancelButton: true, 
+                        confirmButtonColor: '#006E62' 
+                      });
+                      
+                      if (res.isConfirmed) {
+                        setIsSaving(true);
+                        try {
+                          if (termination) {
+                            await disciplineService.deleteTermination(termination.id, id);
+                          } else {
+                            // Jika tidak ada log terminasi tapi end_date terisi (auto-nonaktif)
+                            await accountService.update(id, { end_date: null });
+                            await contractService.syncAccountStatusAndDates(id);
+                          }
+                          setTermination(null);
+                          // Refresh data to get synced status
+                          await fetchData();
+                          Swal.fire({ title: 'Berhasil!', text: 'Karyawan telah diaktifkan kembali.', icon: 'success', timer: 1500, showConfirmButton: false });
+                        } catch (err) {
+                          Swal.fire('Gagal', 'Gagal mengaktifkan kembali karyawan.', 'error');
+                        } finally {
+                          setIsSaving(false);
+                        }
+                      }
+                    }}
                   className="w-full mt-2 py-1.5 text-[10px] font-bold uppercase text-red-600 border border-red-200 rounded hover:bg-white transition-colors"
                 >
                   Batalkan Exit / Aktifkan Kembali

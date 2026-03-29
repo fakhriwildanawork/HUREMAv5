@@ -510,28 +510,6 @@ const AccountForm: React.FC<AccountFormProps> = ({ onClose, onSubmit, initialDat
                             </div>
                           </div>
                         )}
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="space-y-1">
-                            <Label>Jenis Karyawan</Label>
-                            <div className="px-2 py-1.5 text-xs bg-gray-50 border border-gray-200 rounded text-gray-600 font-medium">
-                              {formData.employee_type || '-'}
-                            </div>
-                          </div>
-                          <div className="space-y-1">
-                            <Label>Tanggal Bergabung</Label>
-                            <div className="px-2 py-1.5 text-xs bg-gray-50 border border-gray-200 rounded text-gray-600">
-                              {formData.start_date || '-'}
-                            </div>
-                          </div>
-                        </div>
-                        {formData.employee_type !== 'Tetap' && formData.employee_type && (
-                          <div className="space-y-1">
-                            <Label>Tanggal Berakhir</Label>
-                            <div className="px-2 py-1.5 text-xs bg-gray-50 border border-gray-200 rounded text-gray-600">
-                              {formData.end_date || '-'}
-                            </div>
-                          </div>
-                        )}
 
                         {!initialData && (
                           <>
@@ -560,7 +538,15 @@ const AccountForm: React.FC<AccountFormProps> = ({ onClose, onSubmit, initialDat
                                 </div>
                                 <div className="space-y-1">
                                   <Label htmlFor="end_date">Tgl Akhir Kontrak</Label>
-                                  <input id="end_date" type="date" name="end_date" value={formData.contract_initial.end_date} onChange={handleContractChange} className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-[#006E62] outline-none bg-white" />
+                                  <input 
+                                    id="end_date" 
+                                    type="date" 
+                                    name="end_date" 
+                                    value={formData.contract_initial.end_date} 
+                                    onChange={handleContractChange} 
+                                    disabled={formData.contract_initial.contract_type === 'PKWTT'}
+                                    className={`w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-[#006E62] outline-none bg-white ${formData.contract_initial.contract_type === 'PKWTT' ? 'bg-gray-100 cursor-not-allowed opacity-60' : ''}`} 
+                                  />
                                 </div>
                               </div>
                               <div className="space-y-1">

@@ -42,6 +42,19 @@ export const contractService = {
     return data as AccountContract[];
   },
 
+  async getLatestContract(accountId: string) {
+    const { data, error } = await supabase
+      .from('account_contracts')
+      .select('*')
+      .eq('account_id', accountId)
+      .order('start_date', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    
+    if (error) throw error;
+    return data as AccountContract | null;
+  },
+
   async create(input: AccountContractInput) {
     const sanitized = sanitizePayload(input);
     const { data, error } = await supabase
