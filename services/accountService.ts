@@ -1,11 +1,27 @@
 
 import { supabase } from '../lib/supabase';
-import { Account, AccountInput, CareerLog, CareerLogInput, HealthLog, HealthLogInput } from '../types';
+import { Account, AccountInput, CareerLog, AccountInput as AccountInputType, CareerLogInput, HealthLog, HealthLogInput } from '../types';
 import { locationService } from './locationService';
 import { scheduleService } from './scheduleService';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import * as XLSX from 'xlsx';
+
+const VALID_OPTIONS = {
+  gender: ['Laki-laki', 'Perempuan'],
+  religion: ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Budha', 'Konghucu', 'Kepercayaan Lain'],
+  marital_status: ['Belum Menikah', 'Menikah', 'Cerai Hidup', 'Cerai Mati'],
+  employee_type: ['Tetap', 'Kontrak', 'Harian', 'Magang'],
+  last_education: ['Tidak Sekolah', 'SD', 'SMP/Setara', 'SMA/Setara', 'Diploma 1-4', 'Sarjana', 'Profesi', 'Master', 'Doktor'],
+  yes_no: ['Ya', 'Tidak']
+};
+
+const normalizeOption = (val: string, options: string[]) => {
+  const trimmed = String(val || '').trim();
+  if (!trimmed) return '';
+  const found = options.find(opt => opt.toLowerCase() === trimmed.toLowerCase());
+  return found || trimmed;
+};
 
 /**
  * Fungsi pembantu untuk membersihkan data sebelum dikirim ke Supabase.
@@ -425,30 +441,71 @@ export const accountService = {
 
               // Pre-validation for Location and Schedule
               let errorMsg = '';
-              const locationName = getVal('Lokasi Penempatan (*)');
-              const scheduleName = getVal('Pilih Jadwal Kerja (*)');
               
-              const location = locations.find(l => l.name === locationName);
-              if (!location) {
-                errorMsg = `Lokasi '${locationName}' tidak ditemukan.`;
+              // Normalize Dropdown Values
+              const gender = normalizeOption(getVal('Gender (*)'), VALID_OPTIONS.gender);
+              const religion = normalizeOption(getVal('Agama (*)'), VALID_OPTIONS.religion);
+              const maritalStatus = normalizeOption(getVal('Status Nikah (*)'), VALID_OPTIONS.marital_status);
+              const employeeType = normalizeOption(getVal('Jenis Karyawan (*)'), VALID_OPTIONS.employee_type);
+              const lastEducation = normalizeOption(getVal('Pendidikan Terakhir (*)'), VALID_OPTIONS.last_education);
+              const isLeaveAccumulatedStr = normalizeOption(getVal('Akumulasi Cuti (Ya/Tidak) (*)'), VALID_OPTIONS.yes_no);
+              const limitCheckin = normalizeOption(getVal('Batasi Check-in Datang (Ya/Tidak) (*)'), VALID_OPTIONS.yes_no);
+              const limitCheckout = normalizeOption(getVal('Batasi Check-out Pulang (Ya/Tidak) (*)'), VALID_OPTIONS.yes_no);
+              const limitOtIn = normalizeOption(getVal('Batasi Check-in Lembur (Ya/Tidak) (*)'), VALID_OPTIONS.yes_no);
+              const limitOtOut = normalizeOption(getVal('Batasi Check-out Lembur (Ya/Tidak) (*)'), VALID_OPTIONS.yes_no);
+
+              // Validate Dropdown Options
+              if (gender && !VALID_OPTIONS.gender.includes(gender)) errorMsg = `Gender '${gender}' tidak valid.`;
+              else if (religion && !VALID_OPTIONS.religion.includes(religion)) errorMsg = `Agama '${religion}' tidak valid.`;
+              else if (maritalStatus && !VALID_OPTIONS.marital_status.includes(maritalStatus)) errorMsg = `Status Nikah '${maritalStatus}' tidak valid.`;
+              else if (employeeType && !VALID_OPTIONS.employee_type.includes(employeeType)) errorMsg = `Jenis Karyawan '${employeeType}' tidak valid.`;
+              else if (lastEducation && !VALID_OPTIONS.last_education.includes(lastEducation)) errorMsg = `Pendidikan '${lastEducation}' tidak valid.`;
+              else if (isLeaveAccumulatedStr && !VALID_OPTIONS.yes_no.includes(isLeaveAccumulatedStr)) errorMsg = `Opsi Akumulasi Cuti tidak valid.`;
+
+              if (errorMsg) {
+                // Skip further logic if basic dropdown is invalid
               } else {
-                if (scheduleName === 'Fleksibel') {
-                  // Fleksibel is always valid if location exists
-                } else if (scheduleName === 'Shift Dinamis') {
-                  // Check if location has at least one shift schedule (type 2)
-                  const hasShift = schedules.some(s => s.location_ids.includes(location.id) && s.type === 2);
-                  if (!hasShift) {
-                    errorMsg = `Lokasi '${locationName}' tidak mendukung Shift Dinamis (tidak ada jadwal shift).`;
-                  }
+                const locationName = getVal('Lokasi Penempatan (*)');
+                const scheduleName = getVal('Pilih Jadwal Kerja (*)');
+                
+                const location = locations.find(l => l.name === locationName);
+                if (!location) {
+                  errorMsg = `Lokasi '${locationName}' tidak ditemukan.`;
                 } else {
-                  // Regular schedule: must exist in this location and be type 1 or 2
-                  const schedule = schedules.find(s => 
-                    s.name === scheduleName && 
-                    s.location_ids.includes(location.id) && 
-                    (s.type === 1 || s.type === 2)
-                  );
-                  if (!schedule) {
-                    errorMsg = `Jadwal '${scheduleName}' tidak tersedia di Lokasi '${locationName}'.`;
+                  if (scheduleName === 'Fleksibel') {
+                    // Fleksibel is always valid if location exists
+                  } else if (scheduleName === 'Shift Dinamis') {
+                    // Check if location has at least one shift schedule (type 2)
+                    const hasShift = schedules.some(s => s.location_ids.includes(location.id) && s.type === 2);
+                    if (!hasShift) {
+                      errorMsg = `Lokasi '${locationName}' tidak mendukung Shift Dinamis (tidak ada jadwal shift).`;
+                    }
+                  } else {
+                    // Regular schedule: must exist in this location and be type 1 or 2
+                    const schedule = schedules.find(s => 
+                      s.name === scheduleName && 
+                      s.location_ids.includes(location.id) && 
+                      (s.type === 1 || s.type === 2)
+                    );
+                    if (!schedule) {
+                      errorMsg = `Jadwal '${scheduleName}' tidak tersedia di Lokasi '${locationName}'.`;
+                    }
+                  }
+                }
+
+                // Dependency Validations
+                if (!errorMsg) {
+                  const maternityQuota = parseInt(getVal('Jatah Cuti Melahirkan')) || 0;
+                  const isAccumulated = isLeaveAccumulatedStr === 'Ya';
+                  const maxCarryOver = parseInt(getVal('Maksimal Carry-over (*)')) || 0;
+                  const currentCarryOver = parseInt(getVal('Jatah Carry-over Saat Ini (*)')) || 0;
+
+                  if (gender === 'Laki-laki' && maternityQuota > 0) {
+                    errorMsg = 'Laki-laki tidak berhak mendapatkan jatah cuti melahirkan.';
+                  } else if (!isAccumulated && (maxCarryOver > 0 || currentCarryOver > 0)) {
+                    errorMsg = 'Akumulasi cuti non-aktif, jatah carry-over harus 0.';
+                  } else if (currentCarryOver > maxCarryOver) {
+                    errorMsg = 'Jatah carry-over saat ini tidak boleh melebihi batas maksimal.';
                   }
                 }
               }
@@ -458,37 +515,37 @@ export const accountService = {
               return {
                 full_name: getVal('Nama Lengkap (*)'),
                 nik_ktp: String(getVal('NIK KTP (*)')),
-                gender: getVal('Gender (*)'),
-                religion: getVal('Agama (*)'),
+                gender: gender || getVal('Gender (*)'),
+                religion: religion || getVal('Agama (*)'),
                 dob: formatExcelDate(row['Tgl Lahir (YYYY-MM-DD) (*)']),
                 address: getVal('Alamat (*)'),
                 phone: String(getVal('No Telepon (*)')),
                 email: getVal('Email (*)'),
-                marital_status: getVal('Status Nikah (*)'),
+                marital_status: maritalStatus || getVal('Status Nikah (*)'),
                 dependents_count: parseInt(getVal('Tanggungan')) || 0,
                 internal_nik: internalNik,
                 position: getVal('Jabatan (*)'),
                 grade: getVal('Departemen/Divisi (*)'),
-                location_name: locationName,
-                employee_type: getVal('Jenis Karyawan (*)'),
+                location_name: getVal('Lokasi Penempatan (*)'),
+                employee_type: employeeType || getVal('Jenis Karyawan (*)'),
                 start_date: formatExcelDate(row['Tgl Mulai (YYYY-MM-DD) (*)']),
                 end_date: formatExcelDate(row['Tgl Akhir (YYYY-MM-DD)']),
-                last_education: getVal('Pendidikan Terakhir (*)'),
+                last_education: lastEducation || getVal('Pendidikan Terakhir (*)'),
                 major: getVal('Jurusan'),
                 grad_date: formatExcelDate(row['Tgl Lulus (YYYY-MM-DD)']),
                 emergency_contact_name: getVal('Nama Kontak Darurat'),
                 emergency_contact_rel: getVal('Hubungan Kontak Darurat'),
                 emergency_contact_phone: String(getVal('No HP Kontak Darurat')),
-                schedule_name: scheduleName,
+                schedule_name: getVal('Pilih Jadwal Kerja (*)'),
                 leave_quota: parseInt(getVal('Jatah Cuti Tahunan (*)')) || 12,
-                maternity_leave_quota: parseInt(getVal('Jatah Cuti Melahirkan (*)')) || 0,
-                is_leave_accumulated: getVal('Akumulasi Cuti (Ya/Tidak) (*)') === 'Ya',
+                maternity_leave_quota: parseInt(getVal('Jatah Cuti Melahirkan')) || 0,
+                is_leave_accumulated: isLeaveAccumulatedStr === 'Ya',
                 max_carry_over_days: parseInt(getVal('Maksimal Carry-over (*)')) || 0,
                 carry_over_quota: parseInt(getVal('Jatah Carry-over Saat Ini (*)')) || 0,
-                is_presence_limited_checkin: getVal('Batasi Check-in Datang (Ya/Tidak) (*)') !== 'Tidak',
-                is_presence_limited_checkout: getVal('Batasi Check-out Pulang (Ya/Tidak) (*)') !== 'Tidak',
-                is_presence_limited_ot_in: getVal('Batasi Check-in Lembur (Ya/Tidak) (*)') !== 'Tidak',
-                is_presence_limited_ot_out: getVal('Batasi Check-out Lembur (Ya/Tidak) (*)') !== 'Tidak',
+                is_presence_limited_checkin: limitCheckin !== 'Tidak',
+                is_presence_limited_checkout: limitCheckout !== 'Tidak',
+                is_presence_limited_ot_in: limitOtIn !== 'Tidak',
+                is_presence_limited_ot_out: limitOtOut !== 'Tidak',
                 access_code: String(getVal('Kode Akses (*)')),
                 password: String(getVal('Password (*)')),
                 photo_google_id: matchedPhotoId,

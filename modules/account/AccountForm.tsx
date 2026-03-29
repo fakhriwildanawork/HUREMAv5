@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Save, Upload, User, MapPin, Briefcase, GraduationCap, ShieldCheck, Heart, AlertCircle, Paperclip, ChevronDown, CalendarClock, FileBadge } from 'lucide-react';
+import Swal from 'sweetalert2';
 import { AccountInput, Location, Schedule } from '../../types';
 import { googleDriveService } from '../../services/googleDriveService';
 import { locationService } from '../../services/locationService';
@@ -228,6 +229,23 @@ const AccountForm: React.FC<AccountFormProps> = ({ onClose, onSubmit, initialDat
           onSubmit={(e) => { 
             e.preventDefault(); 
             const payload = { ...formData };
+
+            // Logical Validations
+            if (payload.gender === 'Laki-laki' && payload.maternity_leave_quota > 0) {
+              Swal.fire('Peringatan', 'Laki-laki tidak berhak mendapatkan jatah cuti melahirkan.', 'warning');
+              return;
+            }
+
+            if (!payload.is_leave_accumulated && (payload.max_carry_over_days > 0 || payload.carry_over_quota > 0)) {
+              Swal.fire('Peringatan', 'Akumulasi cuti non-aktif, jatah carry-over harus 0.', 'warning');
+              return;
+            }
+
+            if (payload.is_leave_accumulated && payload.carry_over_quota > payload.max_carry_over_days) {
+              Swal.fire('Peringatan', 'Jatah carry-over saat ini tidak boleh melebihi batas maksimal.', 'warning');
+              return;
+            }
+
             if (payload.employee_type === 'Tetap') {
                payload.end_date = '';
             }
