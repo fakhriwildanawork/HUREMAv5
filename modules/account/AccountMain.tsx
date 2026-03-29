@@ -594,7 +594,7 @@ const AccountMain: React.FC<AccountMainProps> = ({ user, setUser, isSelfProfile 
               }`}
             >
               <UserX size={14} />
-              Karyawan Non-Aktif <span className={`ml-1 px-1.5 py-0.5 rounded-full text-[9px] ${statusFilter === 'non-aktif' ? 'bg-red-50 text-white' : 'bg-gray-100 text-gray-400'}`}>{inactiveAccounts.length}</span>
+              Karyawan Non-Aktif <span className={`ml-1 px-1.5 py-0.5 rounded-full text-[9px] ${statusFilter === 'non-aktif' ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-400'}`}>{inactiveAccounts.length}</span>
             </button>
           </div>
 

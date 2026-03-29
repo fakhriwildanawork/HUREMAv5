@@ -9,13 +9,21 @@ export const authService = {
   async login(accessCode: string, passwordRaw: string): Promise<AuthUser> {
     const { data, error } = await supabase
       .from('accounts')
-      .select('id, full_name, internal_nik, access_code, photo_google_id, schedule_type, gender, role')
+      .select('id, full_name, internal_nik, access_code, photo_google_id, schedule_type, gender, role, end_date')
       .eq('access_code', accessCode)
       .eq('password', passwordRaw)
       .maybeSingle();
 
     if (error) throw new Error(error.message);
     if (!data) throw new Error('Kode Akses atau Password salah.');
+
+    // Check if account is inactive
+    if (data.end_date) {
+      const today = new Date().toISOString().split('T')[0];
+      if (data.end_date <= today) {
+        throw new Error('Akun Anda sudah tidak aktif. Silakan hubungi Admin.');
+      }
+    }
 
     // Determine role based on database value or fallback to access code logic
     const role = data.role || ((data.access_code.startsWith('SP') || data.access_code.includes('ADM')) ? 'admin' : 'user');

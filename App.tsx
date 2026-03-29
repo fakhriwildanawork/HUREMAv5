@@ -74,6 +74,15 @@ const App: React.FC = () => {
     const refreshUserPermissions = async () => {
       const currentUser = authService.getCurrentUser();
       if (currentUser) {
+        // Check if account is inactive
+        if (currentUser.end_date) {
+          const today = new Date().toISOString().split('T')[0];
+          if (currentUser.end_date <= today) {
+            authService.logout();
+            return;
+          }
+        }
+        
         try {
           // Fetch latest permissions
           const { settingsService } = await import('./services/settingsService');
