@@ -156,12 +156,14 @@ export const accountService = {
       notes: 'Initial Career Record'
     }]);
 
-    // 3. Otomatis buat log kesehatan awal
+    // 3. Otomatis buat log kesehatan awal - DIHAPUS sesuai permintaan user
+    /*
     await supabase.from('account_health_logs').insert([{
       account_id: newAccount.id,
       file_mcu_id: file_mcu_id || null,
       notes: 'Initial Health Record'
     }]);
+    */
 
     // 4. Otomatis buat kontrak awal jika disediakan
     if (contract_initial && contract_initial.contract_number) {
@@ -602,13 +604,13 @@ export const accountService = {
                 ktp_google_id: fileMatches.ktp_google_id,
                 diploma_google_id: fileMatches.diploma_google_id,
                 file_sk_id: fileMatches.file_sk_id,
-                contract_initial: {
-                  contract_number: `CON-${internalNik}`,
-                  contract_type: getVal('Jenis Karyawan (*)') === 'Tetap' ? 'PKWTT' : 'PKWT',
-                  start_date: formatExcelDate(row['Tgl Mulai (YYYY-MM-DD) (*)']),
-                  end_date: formatExcelDate(row['Tgl Akhir (YYYY-MM-DD)']),
+                contract_initial: getVal('Nomor Kontrak') ? {
+                  contract_number: getVal('Nomor Kontrak'),
+                  contract_type: getVal('Jenis Kontrak') || (getVal('Jenis Karyawan (*)') === 'Tetap' ? 'PKWTT' : 'PKWT'),
+                  start_date: formatExcelDate(row['Mulai Kontrak (YYYY-MM-DD)']) || formatExcelDate(row['Tgl Mulai (YYYY-MM-DD) (*)']),
+                  end_date: formatExcelDate(row['Akhir Kontrak (YYYY-MM-DD)']) || formatExcelDate(row['Tgl Akhir (YYYY-MM-DD)']),
                   file_id: fileMatches.contract_file_id
-                },
+                } : null,
                 isValid,
                 errorMsg
               };
@@ -723,12 +725,8 @@ export const accountService = {
         schedule_id: newAccount.schedule_id,
         file_sk_id: file_sk_id || null,
         notes: 'Initial Career Record'
-      }]),
-      supabase.from('account_health_logs').insert([{
-        account_id: newAccount.id,
-        file_mcu_id: file_mcu_id || null,
-        notes: 'Initial Health Record'
       }])
+      // Log kesehatan awal dihapus sesuai permintaan user
     ];
 
     if (contract_initial && contract_initial.contract_number) {

@@ -144,6 +144,7 @@ const AccountMain: React.FC<AccountMainProps> = ({ user, setUser, isSelfProfile 
         'Alamat', 'No Telepon', 'Email', 'Status Nikah', 'Tanggungan', 
         'NIK Internal', 'Jabatan', 'Golongan', 'Lokasi Penempatan', 
         'Jenis Karyawan', 'Tgl Mulai (YYYY-MM-DD)', 'Tgl Akhir (YYYY-MM-DD)',
+        'Nomor Kontrak', 'Jenis Kontrak', 'Mulai Kontrak (YYYY-MM-DD)', 'Akhir Kontrak (YYYY-MM-DD)',
         'Pendidikan Terakhir', 'Jurusan', 'Tgl Lulus (YYYY-MM-DD)',
         'Nama Kontak Darurat', 'Hubungan Kontak Darurat', 'No HP Kontak Darurat',
         'Pilih Jadwal Kerja', 'Jatah Cuti Tahunan', 'Jatah Cuti Melahirkan', 
@@ -168,6 +169,7 @@ const AccountMain: React.FC<AccountMainProps> = ({ user, setUser, isSelfProfile 
       const religionList = ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Budha', 'Konghucu', 'Kepercayaan Lain'];
       const maritalList = ['Belum Menikah', 'Menikah', 'Cerai Hidup', 'Cerai Mati'];
       const empTypeList = ['Tetap', 'Kontrak', 'Harian', 'Magang'];
+      const contractTypeList = ['PKWT', 'PKWTT', 'Magang', 'Harian'];
       const yesNoList = ['Ya', 'Tidak'];
       const locList = locations.map(l => l.name);
       const schList = ['Fleksibel', 'Shift Dinamis', ...schedules.map(s => s.name)];
@@ -180,6 +182,7 @@ const AccountMain: React.FC<AccountMainProps> = ({ user, setUser, isSelfProfile 
       refSheet.getColumn(5).values = yesNoList;
       refSheet.getColumn(6).values = locList;
       refSheet.getColumn(7).values = schList;
+      refSheet.getColumn(8).values = contractTypeList;
 
       // Apply Data Validations (Dropdowns)
       // We apply validation to 100 rows
@@ -194,15 +197,17 @@ const AccountMain: React.FC<AccountMainProps> = ({ user, setUser, isSelfProfile 
         templateSheet.getCell(`N${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$G$1:$G$${locList.length}`] };
         // Jenis Karyawan (Col 15)
         templateSheet.getCell(`O${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$D$1:$D$${empTypeList.length}`] };
-        // Pilih Jadwal Kerja (Col 24)
-        templateSheet.getCell(`X${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$H$1:$H$${schList.length}`] };
-        // Akumulasi Cuti (Col 27)
-        templateSheet.getCell(`AA${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$E$1:$E$2`] };
-        // Radius Limits (Col 30-33)
-        templateSheet.getCell(`AD${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$E$1:$E$2`] };
+        // Jenis Kontrak (Col 19)
+        templateSheet.getCell(`S${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$H$1:$H$${contractTypeList.length}`] };
+        // Pilih Jadwal Kerja (Col 28)
+        templateSheet.getCell(`AB${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$H$1:$H$${schList.length}`] };
+        // Akumulasi Cuti (Col 31)
         templateSheet.getCell(`AE${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$E$1:$E$2`] };
-        templateSheet.getCell(`AF${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$E$1:$E$2`] };
-        templateSheet.getCell(`AG${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$E$1:$E$2`] };
+        // Radius Limits (Col 34-37)
+        templateSheet.getCell(`AH${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$E$1:$E$2`] };
+        templateSheet.getCell(`AI${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$E$1:$E$2`] };
+        templateSheet.getCell(`AJ${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$E$1:$E$2`] };
+        templateSheet.getCell(`AK${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$E$1:$E$2`] };
       }
 
       // Auto-size columns
