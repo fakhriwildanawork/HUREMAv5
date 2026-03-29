@@ -29,7 +29,7 @@ const normalizeOption = (val: string, options: string[]) => {
  */
 const sanitizePayload = (payload: any) => {
   const sanitized: any = {};
-  const excludedKeys = ['errorMsg', 'isValid'];
+  const excludedKeys = ['errorMsg', 'isValid', 'grad_date'];
   
   Object.keys(payload).forEach(key => {
     if (excludedKeys.includes(key)) return;
@@ -410,15 +410,35 @@ export const accountService = {
             })
             .map((row: any) => {
               const getVal = (key: string) => row[key] || '';
+              
+              const forceString = (val: any) => {
+                if (val === undefined || val === null) return '';
+                // Handle scientific notation for large numbers (like NIK)
+                if (typeof val === 'number') {
+                  return val.toLocaleString('fullwide', { useGrouping: false });
+                }
+                return String(val).trim();
+              };
+
               const formatExcelDate = (val: any) => {
                 if (!val) return null;
                 if (typeof val === 'number') {
-                  return new Date((val - 25569) * 86400 * 1000).toISOString().split('T')[0];
+                  // Excel date serial to YYYY-MM-DD
+                  const date = new Date((val - 25569) * 86400 * 1000);
+                  if (isNaN(date.getTime())) return null;
+                  return date.toISOString().split('T')[0];
                 }
-                return val;
+                const str = String(val).trim();
+                if (!str) return null;
+                // Basic check for YYYY-MM-DD
+                if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+                // Try parsing other formats if possible, but YYYY-MM-DD is preferred
+                const parsed = new Date(str);
+                if (!isNaN(parsed.getTime())) return parsed.toISOString().split('T')[0];
+                return str; // Return as is if can't parse, let DB handle or error
               };
 
-              const internalNik = String(getVal('NIK Internal (*)')).trim();
+              const internalNik = forceString(getVal('NIK Internal (*)'));
               const fileMatches: any = {
                 photo_google_id: null,
                 ktp_google_id: null,
@@ -544,12 +564,12 @@ export const accountService = {
 
               return {
                 full_name: getVal('Nama Lengkap (*)'),
-                nik_ktp: String(getVal('NIK KTP (*)')),
+                nik_ktp: forceString(getVal('NIK KTP (*)')),
                 gender: gender || getVal('Gender (*)'),
                 religion: religion || getVal('Agama (*)'),
                 dob: formatExcelDate(row['Tgl Lahir (YYYY-MM-DD) (*)']),
                 address: getVal('Alamat (*)'),
-                phone: String(getVal('No Telepon (*)')),
+                phone: forceString(getVal('No Telepon (*)')),
                 email: getVal('Email (*)'),
                 marital_status: maritalStatus || getVal('Status Nikah (*)'),
                 dependents_count: parseInt(getVal('Tanggungan')) || 0,
@@ -565,7 +585,7 @@ export const accountService = {
                 grad_date: formatExcelDate(row['Tgl Lulus (YYYY-MM-DD)']),
                 emergency_contact_name: getVal('Nama Kontak Darurat'),
                 emergency_contact_rel: getVal('Hubungan Kontak Darurat'),
-                emergency_contact_phone: String(getVal('No HP Kontak Darurat')),
+                emergency_contact_phone: forceString(getVal('No HP Kontak Darurat')),
                 schedule_name: getVal('Pilih Jadwal Kerja (*)'),
                 leave_quota: parseInt(getVal('Jatah Cuti Tahunan (*)')) || 12,
                 maternity_leave_quota: parseInt(getVal('Jatah Cuti Melahirkan')) || 0,
