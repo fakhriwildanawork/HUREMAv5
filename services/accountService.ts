@@ -370,6 +370,12 @@ export const accountService = {
 ,
 
   async processImport(file: File, bulkFiles: Record<string, string> = {}) {
+    // Fetch locations and schedules for validation
+    const [locations, schedules] = await Promise.all([
+      locationService.getAll(),
+      scheduleService.getAll()
+    ]);
+
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = async (e) => {
@@ -417,7 +423,37 @@ export const accountService = {
                 'Kode Akses (*)', 'Password (*)'
               ];
 
-              const isValid = requiredFields.every(field => !!row[field]);
+              // Pre-validation for Location and Schedule
+              let errorMsg = '';
+              const locationName = getVal('Lokasi Penempatan (*)');
+              const scheduleName = getVal('Pilih Jadwal Kerja (*)');
+              
+              const location = locations.find(l => l.name === locationName);
+              if (!location) {
+                errorMsg = `Lokasi '${locationName}' tidak ditemukan.`;
+              } else {
+                if (scheduleName === 'Fleksibel') {
+                  // Fleksibel is always valid if location exists
+                } else if (scheduleName === 'Shift Dinamis') {
+                  // Check if location has at least one shift schedule (type 2)
+                  const hasShift = schedules.some(s => s.location_ids.includes(location.id) && s.type === 2);
+                  if (!hasShift) {
+                    errorMsg = `Lokasi '${locationName}' tidak mendukung Shift Dinamis (tidak ada jadwal shift).`;
+                  }
+                } else {
+                  // Regular schedule: must exist in this location and be type 1 or 2
+                  const schedule = schedules.find(s => 
+                    s.name === scheduleName && 
+                    s.location_ids.includes(location.id) && 
+                    (s.type === 1 || s.type === 2)
+                  );
+                  if (!schedule) {
+                    errorMsg = `Jadwal '${scheduleName}' tidak tersedia di Lokasi '${locationName}'.`;
+                  }
+                }
+              }
+
+              const isValid = requiredFields.every(field => !!row[field]) && !errorMsg;
 
               return {
                 full_name: getVal('Nama Lengkap (*)'),
@@ -433,7 +469,7 @@ export const accountService = {
                 internal_nik: internalNik,
                 position: getVal('Jabatan (*)'),
                 grade: getVal('Departemen/Divisi (*)'),
-                location_name: getVal('Lokasi Penempatan (*)'),
+                location_name: locationName,
                 employee_type: getVal('Jenis Karyawan (*)'),
                 start_date: formatExcelDate(row['Tgl Mulai (YYYY-MM-DD) (*)']),
                 end_date: formatExcelDate(row['Tgl Akhir (YYYY-MM-DD)']),
@@ -443,7 +479,7 @@ export const accountService = {
                 emergency_contact_name: getVal('Nama Kontak Darurat'),
                 emergency_contact_rel: getVal('Hubungan Kontak Darurat'),
                 emergency_contact_phone: String(getVal('No HP Kontak Darurat')),
-                schedule_name: getVal('Pilih Jadwal Kerja (*)'),
+                schedule_name: scheduleName,
                 leave_quota: parseInt(getVal('Jatah Cuti Tahunan (*)')) || 12,
                 maternity_leave_quota: parseInt(getVal('Jatah Cuti Melahirkan (*)')) || 0,
                 is_leave_accumulated: getVal('Akumulasi Cuti (Ya/Tidak) (*)') === 'Ya',
@@ -456,7 +492,8 @@ export const accountService = {
                 access_code: String(getVal('Kode Akses (*)')),
                 password: String(getVal('Password (*)')),
                 photo_google_id: matchedPhotoId,
-                isValid
+                isValid,
+                errorMsg
               };
             });
           resolve(results);

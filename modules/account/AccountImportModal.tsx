@@ -116,9 +116,15 @@ const AccountImportModal: React.FC<AccountImportModalProps> = ({ onClose, onSucc
   };
 
   const handleCommit = async () => {
-    const validCount = previewData.filter(d => d.isValid).length;
+    const hasError = previewData.some(d => !d.isValid);
+    if (hasError) {
+      Swal.fire('Peringatan', 'Masih ada data yang error. Silakan perbaiki file Excel Anda terlebih dahulu.', 'warning');
+      return;
+    }
+
+    const validCount = previewData.length;
     if (validCount === 0) {
-      Swal.fire('Peringatan', 'Tidak ada data valid untuk diimpor.', 'warning');
+      Swal.fire('Peringatan', 'Tidak ada data untuk diimpor.', 'warning');
       return;
     }
 
@@ -200,7 +206,7 @@ const AccountImportModal: React.FC<AccountImportModalProps> = ({ onClose, onSucc
                   <div className="flex items-center justify-between bg-emerald-50 p-4 rounded-md border border-emerald-100">
                     <div className="flex items-center gap-2 text-emerald-700">
                       <CheckCircle size={20} />
-                      <p className="text-xs font-bold">Terbaca {previewData.length} baris. ({previewData.filter(d => d.isValid).length} Valid, {previewData.filter(d => !d.isValid).length} Error)</p>
+                      <p className="text-xs font-bold">Terbaca {previewData.length} baris. ({previewData.filter(d => d.isValid).length} Valid, <span className={previewData.some(d => !d.isValid) ? 'text-red-600' : ''}>{previewData.filter(d => !d.isValid).length} Error</span>)</p>
                     </div>
                   </div>
 
@@ -215,6 +221,7 @@ const AccountImportModal: React.FC<AccountImportModalProps> = ({ onClose, onSucc
                           <th className="px-4 py-2">Departemen</th>
                           <th className="px-4 py-2">Lokasi</th>
                           <th className="px-4 py-2">Tgl Mulai</th>
+                          <th className="px-4 py-2">Keterangan</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-50">
@@ -233,6 +240,13 @@ const AccountImportModal: React.FC<AccountImportModalProps> = ({ onClose, onSucc
                             <td className="px-4 py-2">{row.grade}</td>
                             <td className="px-4 py-2">{row.location_name}</td>
                             <td className="px-4 py-2">{row.start_date}</td>
+                            <td className="px-4 py-2">
+                              {!row.isValid && (
+                                <span className="text-red-600 font-medium">
+                                  {row.errorMsg || 'Data wajib belum lengkap'}
+                                </span>
+                              )}
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -329,7 +343,7 @@ const AccountImportModal: React.FC<AccountImportModalProps> = ({ onClose, onSucc
           {step === 1 ? (
             <button 
               onClick={() => setStep(2)}
-              disabled={previewData.length === 0}
+              disabled={previewData.length === 0 || previewData.some(d => !d.isValid)}
               className="flex items-center gap-2 bg-[#006E62] text-white px-8 py-2 rounded shadow-md hover:bg-[#005a50] transition-all text-xs font-bold uppercase disabled:opacity-50"
             >
               Lanjut ke Foto Profil
@@ -344,7 +358,7 @@ const AccountImportModal: React.FC<AccountImportModalProps> = ({ onClose, onSucc
               </button>
               <button 
                 onClick={handleCommit}
-                disabled={isUploading}
+                disabled={isUploading || previewData.some(d => !d.isValid)}
                 className="flex items-center gap-2 bg-[#006E62] text-white px-8 py-2 rounded shadow-md hover:bg-[#005a50] transition-all text-xs font-bold uppercase disabled:opacity-50"
               >
                 {isUploading ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
