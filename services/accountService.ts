@@ -829,6 +829,43 @@ export const accountService = {
   },
 
   // Manual Log Management
+  async syncAccountWithLatestCareerLog(accountId: string) {
+    const { data: latestLog } = await supabase
+      .from('account_career_logs')
+      .select('*')
+      .eq('account_id', accountId)
+      .order('change_date', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (latestLog) {
+      await supabase.from('accounts').update({
+        position: latestLog.position,
+        grade: latestLog.grade,
+        location_id: latestLog.location_id || null,
+        schedule_id: latestLog.schedule_id || null,
+        schedule_type: latestLog.schedule_type || null
+      }).eq('id', accountId);
+    }
+  },
+
+  async syncAccountWithLatestHealthLog(accountId: string) {
+    const { data: latestLog } = await supabase
+      .from('account_health_logs')
+      .select('*')
+      .eq('account_id', accountId)
+      .order('change_date', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (latestLog) {
+      await supabase.from('accounts').update({
+        mcu_status: latestLog.mcu_status,
+        health_risk: latestLog.health_risk
+      }).eq('id', accountId);
+    }
+  },
+
   async createCareerLog(logInput: CareerLogInput) {
     // Filtrasi: Pastikan hanya kolom yang ada di tabel account_career_logs yang dikirim
     const { account_id, position, grade, location_name, file_sk_id, notes, location_id, schedule_id, schedule_type, change_date } = logInput;
@@ -845,14 +882,8 @@ export const accountService = {
       throw error;
     }
 
-    // Sinkronisasi ke profil utama jika data karier berubah
-    await this.update(account_id, {
-      position,
-      grade,
-      location_id: location_id || null,
-      schedule_id: schedule_id || null,
-      schedule_type: schedule_type || null
-    });
+    // Sinkronisasi ke profil utama dengan log terbaru
+    await this.syncAccountWithLatestCareerLog(account_id);
 
     return data as CareerLog;
   },
@@ -874,21 +905,15 @@ export const accountService = {
     }
 
     if (data && data.account_id) {
-      await this.update(data.account_id, {
-        position: data.position,
-        grade: data.grade,
-        location_id: data.location_id || null,
-        schedule_id: data.schedule_id || null,
-        schedule_type: data.schedule_type || null
-      });
+      await this.syncAccountWithLatestCareerLog(data.account_id);
     }
 
     return data as CareerLog;
   },
 
   async deleteCareerLog(id: string) {
-    // 1. Ambil ID file
-    const { data } = await supabase.from('account_career_logs').select('file_sk_id').eq('id', id).single();
+    // 1. Ambil ID file & Account ID
+    const { data } = await supabase.from('account_career_logs').select('file_sk_id, account_id').eq('id', id).single();
     
     // 2. Hapus file dari Drive
     if (data?.file_sk_id) {
@@ -902,6 +927,11 @@ export const accountService = {
       .delete()
       .eq('id', id);
     if (error) throw error;
+
+    // 4. Sinkronisasi
+    if (data?.account_id) {
+      await this.syncAccountWithLatestCareerLog(data.account_id);
+    }
     return true;
   },
 
@@ -921,11 +951,8 @@ export const accountService = {
       throw error;
     }
 
-    // Sinkronisasi ke profil utama
-    await this.update(account_id, {
-      mcu_status,
-      health_risk
-    });
+    // Sinkronisasi ke profil utama dengan log terbaru
+    await this.syncAccountWithLatestHealthLog(account_id);
 
     return data as HealthLog;
   },
@@ -947,18 +974,15 @@ export const accountService = {
     }
 
     if (data && data.account_id) {
-      await this.update(data.account_id, {
-        mcu_status: data.mcu_status,
-        health_risk: data.health_risk
-      });
+      await this.syncAccountWithLatestHealthLog(data.account_id);
     }
 
     return data as HealthLog;
   },
 
   async deleteHealthLog(id: string) {
-    // 1. Ambil ID file
-    const { data } = await supabase.from('account_health_logs').select('file_mcu_id').eq('id', id).single();
+    // 1. Ambil ID file & Account ID
+    const { data } = await supabase.from('account_health_logs').select('file_mcu_id, account_id').eq('id', id).single();
     
     // 2. Hapus file dari Drive
     if (data?.file_mcu_id) {
@@ -972,6 +996,11 @@ export const accountService = {
       .delete()
       .eq('id', id);
     if (error) throw error;
+
+    // 4. Sinkronisasi
+    if (data?.account_id) {
+      await this.syncAccountWithLatestHealthLog(data.account_id);
+    }
     return true;
   }
 };

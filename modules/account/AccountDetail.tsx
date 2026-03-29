@@ -97,44 +97,28 @@ const AccountDetail: React.FC<AccountDetailProps> = ({ id, onClose, onEdit, onDe
     setIsSaving(true);
     const type = showLogForm?.type;
     const isEdit = showLogForm?.isEdit;
-    const tempId = data.id || `temp-${Date.now()}`;
-    const optimisticEntry = { ...data, id: tempId, change_date: data.change_date || new Date().toISOString() };
 
     try {
       if (type === 'career') {
         if (isEdit) {
-          const updated = await accountService.updateCareerLog(data.id, data);
-          setCareerLogs(prev => prev.map(l => l.id === data.id ? updated : l));
+          await accountService.updateCareerLog(data.id, data);
         } else {
-          setCareerLogs(prev => [optimisticEntry, ...prev]);
-          const created = await accountService.createCareerLog(data);
-          setCareerLogs(prev => prev.map(l => l.id === tempId ? created : l));
+          await accountService.createCareerLog(data);
         }
-        setAccount(prev => prev ? { 
-          ...prev, 
-          position: data.position, 
-          grade: data.grade, 
-          location_id: data.location_id, 
-          location: { ...prev?.location, name: data.location_name },
-          schedule_id: data.schedule_id,
-          schedule_type: data.schedule_type
-        } : null);
       } else if (type === 'health') {
         if (isEdit) {
-          const updated = await accountService.updateHealthLog(data.id, data);
-          setHealthLogs(prev => prev.map(l => l.id === data.id ? updated : l));
+          await accountService.updateHealthLog(data.id, data);
         } else {
-          setHealthLogs(prev => [optimisticEntry, ...prev]);
-          const created = await accountService.createHealthLog(data);
-          setHealthLogs(prev => prev.map(l => l.id === tempId ? created : l));
+          await accountService.createHealthLog(data);
         }
-        setAccount(prev => prev ? { ...prev, mcu_status: data.mcu_status, health_risk: data.health_risk } : null);
       }
+      
+      // Refetch data to ensure UI is perfectly in sync with DB
+      await fetchData();
+      
       setShowLogForm(null);
       Swal.fire({ title: 'Berhasil!', text: `Riwayat telah ${isEdit ? 'diperbarui' : 'ditambahkan'}.`, icon: 'success', timer: 1000, showConfirmButton: false });
     } catch (error) {
-      if (type === 'career' && !isEdit) setCareerLogs(prev => prev.filter(l => l.id !== tempId));
-      else if (type === 'health' && !isEdit) setHealthLogs(prev => prev.filter(l => l.id !== tempId));
       Swal.fire('Gagal', 'Gagal menyimpan riwayat', 'error');
     } finally {
       setIsSaving(false);
@@ -158,11 +142,13 @@ const AccountDetail: React.FC<AccountDetailProps> = ({ id, onClose, onEdit, onDe
       try {
         if (type === 'career') {
           await accountService.deleteCareerLog(logId);
-          setCareerLogs(prev => prev.filter(l => l.id !== logId));
         } else if (type === 'health') {
           await accountService.deleteHealthLog(logId);
-          setHealthLogs(prev => prev.filter(l => l.id !== logId));
         }
+        
+        // Refetch data after deletion
+        await fetchData();
+        
         Swal.fire('Terhapus!', 'Riwayat telah dihapus.', 'success');
       } catch (error) {
         Swal.fire('Gagal', 'Gagal menghapus data', 'error');
