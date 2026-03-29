@@ -443,7 +443,10 @@ export const accountService = {
               let errorMsg = '';
               
               // Check for missing required fields
-              const missingFields = requiredFields.filter(field => !row[field]);
+              const missingFields = requiredFields.filter(field => {
+                const val = row[field];
+                return val === undefined || val === null || String(val).trim() === '';
+              });
               if (missingFields.length > 0) {
                 // Clean up field names for display (remove (*) and simplify)
                 const cleanNames = missingFields.map(f => f.replace(' (*)', '').replace(' (Ya/Tidak)', '').replace(' (YYYY-MM-DD)', ''));
@@ -518,7 +521,10 @@ export const accountService = {
                 }
               }
 
-              const isValid = requiredFields.every(field => !!row[field]) && !errorMsg;
+              const isValid = requiredFields.every(field => {
+                const val = row[field];
+                return val !== undefined && val !== null && String(val).trim() !== '';
+              }) && !errorMsg;
 
               return {
                 full_name: getVal('Nama Lengkap (*)'),
