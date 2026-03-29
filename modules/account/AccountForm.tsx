@@ -379,168 +379,172 @@ const AccountForm: React.FC<AccountFormProps> = ({ onClose, onSubmit, initialDat
             <div className="space-y-4">
               {!isSelfEdit && (
                 <>
-                  <SectionHeader icon={Briefcase} title="Karier & Penempatan" />
-                  <div className="space-y-3">
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="space-y-1">
-                        <Label htmlFor="internal_nik" required>NIK Internal</Label>
-                        <input id="internal_nik" name="internal_nik" value={formData.internal_nik} onChange={handleChange} className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-[#006E62] outline-none" required />
-                      </div>
-                      <div className="space-y-1">
-                        <Label htmlFor="location_id" required>Lokasi</Label>
-                        <select id="location_id" name="location_id" value={formData.location_id} onChange={handleChange} className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-[#006E62] outline-none" required>
-                          <option value="">-- Pilih Lokasi --</option>
-                          {locations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
-                        </select>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="space-y-1 relative" ref={posRef}>
-                        <Label htmlFor="position" required>Jabatan</Label>
-                        <div className="relative">
-                          <input 
-                            id="position"
-                            name="position" 
-                            autoComplete="off"
-                            value={formData.position} 
-                            onChange={(e) => { handleChange(e); setShowPosDropdown(true); }}
-                            onFocus={() => setShowPosDropdown(true)}
-                            className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-[#006E62] outline-none pr-7 bg-white" 
-                            required 
-                          />
-                          <button 
-                            type="button" 
-                            onClick={() => setShowPosDropdown(!showPosDropdown)}
-                            className="absolute right-0 top-0 bottom-0 px-2 flex items-center text-gray-400"
-                          >
-                            <ChevronDown size={14} />
-                          </button>
-                        </div>
-                        {showPosDropdown && filteredPositions.length > 0 && (
-                          <div className="absolute z-[70] w-full mt-1 bg-white border border-gray-100 rounded shadow-lg max-h-40 overflow-y-auto">
-                            {filteredPositions.map(p => (
-                              <div 
-                                key={p} 
-                                className="px-3 py-2 text-xs hover:bg-gray-50 cursor-pointer text-gray-700"
-                                onClick={() => {
-                                  setFormData(prev => ({ ...prev, position: p }));
-                                  setShowPosDropdown(false);
-                                }}
-                              >
-                                {p}
-                              </div>
-                            ))}
+                  {!initialData && (
+                    <>
+                      <SectionHeader icon={Briefcase} title="Karier & Penempatan" />
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="space-y-1">
+                            <Label htmlFor="internal_nik" required>NIK Internal</Label>
+                            <input id="internal_nik" name="internal_nik" value={formData.internal_nik} onChange={handleChange} className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-[#006E62] outline-none" required />
                           </div>
-                        )}
-                      </div>
-                      <div className="space-y-1 relative" ref={gradeRef}>
-                        <Label htmlFor="grade">Golongan</Label>
-                        <div className="relative">
-                          <input 
-                            id="grade"
-                            name="grade" 
-                            autoComplete="off"
-                            value={formData.grade} 
-                            onChange={(e) => { handleChange(e); setShowGradeDropdown(true); }}
-                            onFocus={() => setShowGradeDropdown(true)}
-                            className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-[#006E62] outline-none pr-7 bg-white" 
-                          />
-                          <button 
-                            type="button" 
-                            onClick={() => setShowGradeDropdown(!showGradeDropdown)}
-                            className="absolute right-0 top-0 bottom-0 px-2 flex items-center text-gray-400"
-                          >
-                            <ChevronDown size={14} />
-                          </button>
-                        </div>
-                        {showGradeDropdown && filteredGrades.length > 0 && (
-                          <div className="absolute z-[70] w-full mt-1 bg-white border border-gray-100 rounded shadow-lg max-h-40 overflow-y-auto">
-                            {filteredGrades.map(g => (
-                              <div 
-                                key={g} 
-                                className="px-3 py-2 text-xs hover:bg-gray-50 cursor-pointer text-gray-700"
-                                onClick={() => {
-                                  setFormData(prev => ({ ...prev, grade: g }));
-                                  setShowGradeDropdown(false);
-                                }}
-                              >
-                                {g}
-                              </div>
-                            ))}
+                          <div className="space-y-1">
+                            <Label htmlFor="location_id" required>Lokasi</Label>
+                            <select id="location_id" name="location_id" value={formData.location_id} onChange={handleChange} className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-[#006E62] outline-none" required>
+                              <option value="">-- Pilih Lokasi --</option>
+                              {locations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
+                            </select>
                           </div>
-                        )}
-                      </div>
-                    </div>
-                    {!initialData && (
-                      <div className="space-y-1 p-2 bg-gray-50 rounded border border-gray-100">
-                        <Label htmlFor="file_sk_id">Upload SK Awal (G-Drive)</Label>
-                        <div className="flex items-center gap-2 mt-1">
-                          <label htmlFor="file_sk_id" className="flex items-center gap-2 px-3 py-1.5 bg-white border border-dashed border-gray-300 rounded cursor-pointer hover:bg-gray-100 transition-colors flex-1 overflow-hidden">
-                            {formData.file_sk_id ? (
-                              <div className="w-5 h-5 rounded overflow-hidden border border-gray-100 shrink-0">
-                                <img src={googleDriveService.getFileUrl(formData.file_sk_id)} className="w-full h-full object-cover" />
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="space-y-1 relative" ref={posRef}>
+                            <Label htmlFor="position" required>Jabatan</Label>
+                            <div className="relative">
+                              <input 
+                                id="position"
+                                name="position" 
+                                autoComplete="off"
+                                value={formData.position} 
+                                onChange={(e) => { handleChange(e); setShowPosDropdown(true); }}
+                                onFocus={() => setShowPosDropdown(true)}
+                                className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-[#006E62] outline-none pr-7 bg-white" 
+                                required 
+                              />
+                              <button 
+                                type="button" 
+                                onClick={() => setShowPosDropdown(!showPosDropdown)}
+                                className="absolute right-0 top-0 bottom-0 px-2 flex items-center text-gray-400"
+                              >
+                                <ChevronDown size={14} />
+                              </button>
+                            </div>
+                            {showPosDropdown && filteredPositions.length > 0 && (
+                              <div className="absolute z-[70] w-full mt-1 bg-white border border-gray-100 rounded shadow-lg max-h-40 overflow-y-auto">
+                                {filteredPositions.map(p => (
+                                  <div 
+                                    key={p} 
+                                    className="px-3 py-2 text-xs hover:bg-gray-50 cursor-pointer text-gray-700"
+                                    onClick={() => {
+                                      setFormData(prev => ({ ...prev, position: p }));
+                                      setShowPosDropdown(false);
+                                    }}
+                                  >
+                                    {p}
+                                  </div>
+                                ))}
                               </div>
-                            ) : (
-                              <Upload size={12} className="text-gray-400 shrink-0" />
                             )}
-                            <span className="text-[10px] text-gray-500 truncate">{formData.file_sk_id ? 'SK Terlampir' : 'PDF/Gambar SK'}</span>
-                            <input id="file_sk_id" type="file" className="hidden" accept="image/*,application/pdf" onChange={(e) => handleFileUpload(e, 'file_sk_id')} />
-                          </label>
-                          {uploading['file_sk_id'] && <div className="w-4 h-4 border-2 border-[#006E62] border-t-transparent rounded-full animate-spin"></div>}
-                        </div>
-                      </div>
-                    )}
-                    <div className="space-y-1">
-                      <Label htmlFor="employee_type" required>Jenis Karyawan</Label>
-                      <select id="employee_type" name="employee_type" value={formData.employee_type} onChange={handleChange} className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-[#006E62] outline-none" required>
-                        <option value="Tetap">Tetap</option>
-                        <option value="Kontrak">Kontrak</option>
-                        <option value="Harian">Harian</option>
-                        <option value="Magang">Magang</option>
-                      </select>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="space-y-1">
-                        <Label htmlFor="start_date" required>Tgl Mulai</Label>
-                        <input id="start_date" type="date" name="start_date" value={formData.start_date} onChange={handleChange} className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-[#006E62] outline-none" required />
-                      </div>
-                      <div className="space-y-1">
-                        <Label htmlFor="end_date">Tgl Akhir</Label>
-                        <input 
-                          id="end_date"
-                          type="date" 
-                          name="end_date" 
-                          value={formData.end_date} 
-                          onChange={handleChange} 
-                          disabled={formData.employee_type === 'Tetap'}
-                          className={`w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-[#006E62] outline-none transition-colors ${formData.employee_type === 'Tetap' ? 'bg-gray-100 cursor-not-allowed opacity-60' : 'bg-white'}`} 
-                        />
-                      </div>
-                    </div>
-
-                    {!initialData && (
-                      <>
-                        <SectionHeader icon={FileBadge} title="Dokumen Kontrak Awal" />
-                        <div className="space-y-3 p-3 bg-emerald-50/50 border border-emerald-100 rounded">
-                          <div className="space-y-1">
-                            <Label htmlFor="contract_number">Nomor Kontrak</Label>
-                            <input id="contract_number" name="contract_number" value={formData.contract_initial.contract_number} onChange={handleContractChange} className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-[#006E62] outline-none bg-white" />
                           </div>
-                          <div className="space-y-1">
-                            <Label htmlFor="contract_file">Upload PDF Kontrak</Label>
-                            <div className="flex items-center gap-2">
-                              <label htmlFor="contract_file" className="flex items-center gap-2 px-3 py-1.5 bg-white border border-dashed border-gray-300 rounded cursor-pointer hover:bg-gray-50 flex-1 overflow-hidden transition-colors">
-                                <Upload size={12} className="text-gray-400 shrink-0" />
-                                <span className="text-[10px] text-gray-500 truncate">{formData.contract_initial.file_id ? 'PDF Kontrak OK' : 'Pilih File PDF'}</span>
-                                <input id="contract_file" type="file" className="hidden" accept="application/pdf" onChange={(e) => handleFileUpload(e, 'contract_file')} />
+                          <div className="space-y-1 relative" ref={gradeRef}>
+                            <Label htmlFor="grade">Golongan</Label>
+                            <div className="relative">
+                              <input 
+                                id="grade"
+                                name="grade" 
+                                autoComplete="off"
+                                value={formData.grade} 
+                                onChange={(e) => { handleChange(e); setShowGradeDropdown(true); }}
+                                onFocus={() => setShowGradeDropdown(true)}
+                                className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-[#006E62] outline-none pr-7 bg-white" 
+                              />
+                              <button 
+                                type="button" 
+                                onClick={() => setShowGradeDropdown(!showGradeDropdown)}
+                                className="absolute right-0 top-0 bottom-0 px-2 flex items-center text-gray-400"
+                              >
+                                <ChevronDown size={14} />
+                              </button>
+                            </div>
+                            {showGradeDropdown && filteredGrades.length > 0 && (
+                              <div className="absolute z-[70] w-full mt-1 bg-white border border-gray-100 rounded shadow-lg max-h-40 overflow-y-auto">
+                                {filteredGrades.map(g => (
+                                  <div 
+                                    key={g} 
+                                    className="px-3 py-2 text-xs hover:bg-gray-50 cursor-pointer text-gray-700"
+                                    onClick={() => {
+                                      setFormData(prev => ({ ...prev, grade: g }));
+                                      setShowGradeDropdown(false);
+                                    }}
+                                  >
+                                    {g}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        {!initialData && (
+                          <div className="space-y-1 p-2 bg-gray-50 rounded border border-gray-100">
+                            <Label htmlFor="file_sk_id">Upload SK Awal (G-Drive)</Label>
+                            <div className="flex items-center gap-2 mt-1">
+                              <label htmlFor="file_sk_id" className="flex items-center gap-2 px-3 py-1.5 bg-white border border-dashed border-gray-300 rounded cursor-pointer hover:bg-gray-100 transition-colors flex-1 overflow-hidden">
+                                {formData.file_sk_id ? (
+                                  <div className="w-5 h-5 rounded overflow-hidden border border-gray-100 shrink-0">
+                                    <img src={googleDriveService.getFileUrl(formData.file_sk_id)} className="w-full h-full object-cover" />
+                                  </div>
+                                ) : (
+                                  <Upload size={12} className="text-gray-400 shrink-0" />
+                                )}
+                                <span className="text-[10px] text-gray-500 truncate">{formData.file_sk_id ? 'SK Terlampir' : 'PDF/Gambar SK'}</span>
+                                <input id="file_sk_id" type="file" className="hidden" accept="image/*,application/pdf" onChange={(e) => handleFileUpload(e, 'file_sk_id')} />
                               </label>
-                              {uploading['contract_file'] && <div className="w-4 h-4 border-2 border-[#006E62] border-t-transparent rounded-full animate-spin"></div>}
+                              {uploading['file_sk_id'] && <div className="w-4 h-4 border-2 border-[#006E62] border-t-transparent rounded-full animate-spin"></div>}
                             </div>
                           </div>
+                        )}
+                        <div className="space-y-1">
+                          <Label htmlFor="employee_type" required>Jenis Karyawan</Label>
+                          <select id="employee_type" name="employee_type" value={formData.employee_type} onChange={handleChange} className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-[#006E62] outline-none" required>
+                            <option value="Tetap">Tetap</option>
+                            <option value="Kontrak">Kontrak</option>
+                            <option value="Harian">Harian</option>
+                            <option value="Magang">Magang</option>
+                          </select>
                         </div>
-                      </>
-                    )}
-                  </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="space-y-1">
+                            <Label htmlFor="start_date" required>Tgl Mulai</Label>
+                            <input id="start_date" type="date" name="start_date" value={formData.start_date} onChange={handleChange} className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-[#006E62] outline-none" required />
+                          </div>
+                          <div className="space-y-1">
+                            <Label htmlFor="end_date">Tgl Akhir</Label>
+                            <input 
+                              id="end_date"
+                              type="date" 
+                              name="end_date" 
+                              value={formData.end_date} 
+                              onChange={handleChange} 
+                              disabled={formData.employee_type === 'Tetap'}
+                              className={`w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-[#006E62] outline-none transition-colors ${formData.employee_type === 'Tetap' ? 'bg-gray-100 cursor-not-allowed opacity-60' : 'bg-white'}`} 
+                            />
+                          </div>
+                        </div>
+
+                        {!initialData && (
+                          <>
+                            <SectionHeader icon={FileBadge} title="Dokumen Kontrak Awal" />
+                            <div className="space-y-3 p-3 bg-emerald-50/50 border border-emerald-100 rounded">
+                              <div className="space-y-1">
+                                <Label htmlFor="contract_number">Nomor Kontrak</Label>
+                                <input id="contract_number" name="contract_number" value={formData.contract_initial.contract_number} onChange={handleContractChange} className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-[#006E62] outline-none bg-white" />
+                              </div>
+                              <div className="space-y-1">
+                                <Label htmlFor="contract_file">Upload PDF Kontrak</Label>
+                                <div className="flex items-center gap-2">
+                                  <label htmlFor="contract_file" className="flex items-center gap-2 px-3 py-1.5 bg-white border border-dashed border-gray-300 rounded cursor-pointer hover:bg-gray-50 flex-1 overflow-hidden transition-colors">
+                                    <Upload size={12} className="text-gray-400 shrink-0" />
+                                    <span className="text-[10px] text-gray-500 truncate">{formData.contract_initial.file_id ? 'PDF Kontrak OK' : 'Pilih File PDF'}</span>
+                                    <input id="contract_file" type="file" className="hidden" accept="application/pdf" onChange={(e) => handleFileUpload(e, 'contract_file')} />
+                                  </label>
+                                  {uploading['contract_file'] && <div className="w-4 h-4 border-2 border-[#006E62] border-t-transparent rounded-full animate-spin"></div>}
+                                </div>
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </>
+                  )}
 
                   <SectionHeader icon={GraduationCap} title="Pendidikan & Dokumen" />
                   <div className="space-y-3">
@@ -593,28 +597,30 @@ const AccountForm: React.FC<AccountFormProps> = ({ onClose, onSubmit, initialDat
               <div className="space-y-3">
                  {!isSelfEdit && (
                    <>
-                    <div className="space-y-1">
-                        <Label htmlFor="schedule_id" required>Pilih Jadwal Kerja</Label>
-                        <div className="relative">
-                          <select 
-                            id="schedule_id"
-                            required 
-                            name="schedule_id" 
-                            value={formData.schedule_id} 
-                            onChange={handleChange} 
-                            disabled={!formData.location_id}
-                            className={`w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-[#006E62] outline-none bg-white appearance-none pr-8 ${!formData.location_id ? 'bg-gray-50 cursor-not-allowed' : ''}`}
-                          >
-                            <option value="">-- {formData.location_id ? 'Pilih Jadwal' : 'Pilih Lokasi Terlebih Dahulu'} --</option>
-                            <option value="FLEKSIBEL">Fleksibel</option>
-                            <option value="DINAMIS" disabled={!hasShiftSchedules}>
-                              Shift Dinamis {!hasShiftSchedules ? '(Shift Tidak Tersedia di Lokasi)' : '(Pilih Saat Presensi)'}
-                            </option>
-                            {schedules.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                          </select>
-                          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={14} />
-                        </div>
-                    </div>
+                    {!initialData && (
+                      <div className="space-y-1">
+                          <Label htmlFor="schedule_id" required>Pilih Jadwal Kerja</Label>
+                          <div className="relative">
+                            <select 
+                              id="schedule_id"
+                              required 
+                              name="schedule_id" 
+                              value={formData.schedule_id} 
+                              onChange={handleChange} 
+                              disabled={!formData.location_id}
+                              className={`w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-[#006E62] outline-none bg-white appearance-none pr-8 ${!formData.location_id ? 'bg-gray-50 cursor-not-allowed' : ''}`}
+                            >
+                              <option value="">-- {formData.location_id ? 'Pilih Jadwal' : 'Pilih Lokasi Terlebih Dahulu'} --</option>
+                              <option value="FLEKSIBEL">Fleksibel</option>
+                              <option value="DINAMIS" disabled={!hasShiftSchedules}>
+                                Shift Dinamis {!hasShiftSchedules ? '(Shift Tidak Tersedia di Lokasi)' : '(Pilih Saat Presensi)'}
+                              </option>
+                              {schedules.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                            </select>
+                            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={14} />
+                          </div>
+                      </div>
+                    )}
 
                     <div className="grid grid-cols-2 gap-2">
                         <div className="space-y-1">
