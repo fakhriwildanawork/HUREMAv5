@@ -526,7 +526,29 @@ const AccountForm: React.FC<AccountFormProps> = ({ onClose, onSubmit, initialDat
                             <div className="space-y-3 p-3 bg-emerald-50/50 border border-emerald-100 rounded">
                               <div className="space-y-1">
                                 <Label htmlFor="contract_number">Nomor Kontrak</Label>
-                                <input id="contract_number" name="contract_number" value={formData.contract_initial.contract_number} onChange={handleContractChange} className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-[#006E62] outline-none bg-white" />
+                                <input id="contract_number" name="contract_number" value={formData.contract_initial.contract_number} onChange={handleContractChange} className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-[#006E62] outline-none bg-white" placeholder="Opsional" />
+                              </div>
+                              <div className="grid grid-cols-1 gap-2">
+                                <div className="space-y-1">
+                                  <Label htmlFor="contract_type">Jenis Kontrak</Label>
+                                  <select id="contract_type" name="contract_type" value={formData.contract_initial.contract_type} onChange={handleContractChange} className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-[#006E62] outline-none bg-white">
+                                    <option value="">-- Pilih Jenis --</option>
+                                    <option value="PKWT">PKWT (Kontrak)</option>
+                                    <option value="PKWTT">PKWTT (Tetap)</option>
+                                    <option value="Magang">Magang</option>
+                                    <option value="Harian">Harian</option>
+                                  </select>
+                                </div>
+                              </div>
+                              <div className="grid grid-cols-2 gap-2">
+                                <div className="space-y-1">
+                                  <Label htmlFor="start_date">Tgl Mulai Kontrak</Label>
+                                  <input id="start_date" type="date" name="start_date" value={formData.contract_initial.start_date} onChange={handleContractChange} className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-[#006E62] outline-none bg-white" />
+                                </div>
+                                <div className="space-y-1">
+                                  <Label htmlFor="end_date">Tgl Akhir Kontrak</Label>
+                                  <input id="end_date" type="date" name="end_date" value={formData.contract_initial.end_date} onChange={handleContractChange} className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-[#006E62] outline-none bg-white" />
+                                </div>
                               </div>
                               <div className="space-y-1">
                                 <Label htmlFor="contract_file">Upload PDF Kontrak</Label>
