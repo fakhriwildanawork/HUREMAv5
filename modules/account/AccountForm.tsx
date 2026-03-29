@@ -148,10 +148,28 @@ const AccountForm: React.FC<AccountFormProps> = ({ onClose, onSubmit, initialDat
 
   const handleContractChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      contract_initial: { ...prev.contract_initial, [name]: value }
-    }));
+    setFormData(prev => {
+      const updatedContract = { ...prev.contract_initial, [name]: value };
+      const updated = { ...prev, contract_initial: updatedContract };
+
+      // Sync to main profile fields for new accounts
+      if (name === 'start_date') updated.start_date = value;
+      if (name === 'end_date') updated.end_date = value;
+      if (name === 'contract_type') {
+        if (value === 'PKWTT') {
+          updated.employee_type = 'Tetap';
+          updated.end_date = '';
+          updatedContract.end_date = '';
+        } else if (value === 'PKWT') {
+          updated.employee_type = 'Kontrak';
+        } else if (value === 'Magang') {
+          updated.employee_type = 'Magang';
+        } else if (value === 'Harian') {
+          updated.employee_type = 'Harian';
+        }
+      }
+      return updated;
+    });
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: string) => {
@@ -492,33 +510,28 @@ const AccountForm: React.FC<AccountFormProps> = ({ onClose, onSubmit, initialDat
                             </div>
                           </div>
                         )}
-                        <div className="space-y-1">
-                          <Label htmlFor="employee_type" required>Jenis Karyawan</Label>
-                          <select id="employee_type" name="employee_type" value={formData.employee_type} onChange={handleChange} className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-[#006E62] outline-none" required>
-                            <option value="Tetap">Tetap</option>
-                            <option value="Kontrak">Kontrak</option>
-                            <option value="Harian">Harian</option>
-                            <option value="Magang">Magang</option>
-                          </select>
-                        </div>
                         <div className="grid grid-cols-2 gap-2">
                           <div className="space-y-1">
-                            <Label htmlFor="start_date" required>Tanggal Bergabung</Label>
-                            <input id="start_date" type="date" name="start_date" value={formData.start_date} onChange={handleChange} className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-[#006E62] outline-none" required />
+                            <Label>Jenis Karyawan</Label>
+                            <div className="px-2 py-1.5 text-xs bg-gray-50 border border-gray-200 rounded text-gray-600 font-medium">
+                              {formData.employee_type || '-'}
+                            </div>
                           </div>
                           <div className="space-y-1">
-                            <Label htmlFor="end_date">Tanggal Berakhir</Label>
-                            <input 
-                              id="end_date"
-                              type="date" 
-                              name="end_date" 
-                              value={formData.end_date} 
-                              onChange={handleChange} 
-                              disabled={formData.employee_type === 'Tetap'}
-                              className={`w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-[#006E62] outline-none transition-colors ${formData.employee_type === 'Tetap' ? 'bg-gray-100 cursor-not-allowed opacity-60' : 'bg-white'}`} 
-                            />
+                            <Label>Tanggal Bergabung</Label>
+                            <div className="px-2 py-1.5 text-xs bg-gray-50 border border-gray-200 rounded text-gray-600">
+                              {formData.start_date || '-'}
+                            </div>
                           </div>
                         </div>
+                        {formData.employee_type !== 'Tetap' && formData.employee_type && (
+                          <div className="space-y-1">
+                            <Label>Tanggal Berakhir</Label>
+                            <div className="px-2 py-1.5 text-xs bg-gray-50 border border-gray-200 rounded text-gray-600">
+                              {formData.end_date || '-'}
+                            </div>
+                          </div>
+                        )}
 
                         {!initialData && (
                           <>

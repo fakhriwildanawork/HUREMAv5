@@ -272,8 +272,7 @@ export const accountService = {
         'Nama Lengkap (*)', 'NIK KTP (*)', 'Gender (*)', 'Agama (*)', 'Tgl Lahir (YYYY-MM-DD) (*)', 
         'Alamat (*)', 'No Telepon (*)', 'Email (*)', 'Status Nikah (*)', 'Tanggungan', 
         'NIK Internal (*)', 'Jabatan (*)', 'Departemen/Divisi (*)', 'Lokasi Penempatan (*)', 
-        'Jenis Karyawan (*)', 'Tanggal Bergabung (YYYY-MM-DD) (*)', 'Tanggal Berakhir (YYYY-MM-DD)',
-        'Nomor Kontrak', 'Jenis Kontrak', 'Mulai Kontrak (YYYY-MM-DD)', 'Akhir Kontrak (YYYY-MM-DD)',
+        'Nomor Kontrak (*)', 'Jenis Kontrak (*)', 'Mulai Kontrak (YYYY-MM-DD) (*)', 'Akhir Kontrak (YYYY-MM-DD)',
         'Pendidikan Terakhir (*)', 'Jurusan', 'Tgl Lulus (YYYY-MM-DD)',
         'Nama Kontak Darurat', 'Hubungan Kontak Darurat', 'No HP Kontak Darurat',
         'Pilih Jadwal Kerja (*)', 'Jatah Cuti Tahunan (*)', 'Jatah Cuti Melahirkan', 
@@ -290,8 +289,7 @@ export const accountService = {
         'Wajib diisi', 'Wajib diisi', 'Pilih dari daftar', 'Pilih dari daftar', 'Format: YYYY-MM-DD',
         'Wajib diisi', 'Wajib diisi', 'Wajib diisi', 'Pilih dari daftar', 'Opsional (angka)',
         'Wajib diisi', 'Wajib diisi', 'Wajib diisi', 'Pilih dari daftar',
-        'Pilih dari daftar', 'Format: YYYY-MM-DD', 'Kosongkan jika karyawan Tetap',
-        'Opsional', 'Pilih dari daftar', 'Format: YYYY-MM-DD (Opsional)', 'Format: YYYY-MM-DD (Opsional)',
+        'Wajib diisi', 'Pilih dari daftar', 'Format: YYYY-MM-DD', 'Kosongkan jika PKWTT',
         'Pilih dari daftar', 'Opsional', 'Format: YYYY-MM-DD (Opsional)',
         'Opsional', 'Opsional', 'Opsional',
         'Pilih dari daftar', 'Wajib diisi (angka)', 'Khusus Perempuan (angka)',
@@ -307,7 +305,6 @@ export const accountService = {
         'Contoh Nama', '1234567890123456', 'Laki-laki', 'Islam', '1990-01-01',
         'Jl. Contoh No. 123', '08123456789', 'contoh@email.com', 'Belum Menikah', '0',
         'EMP001', 'Staff', 'Operasional', locations[0]?.name || 'Pusat',
-        'Tetap', '2024-01-01', '',
         'KTR/001/2024', 'PKWT', '2024-01-01', '2025-01-01',
         'Sarjana', 'Teknik Informatika', '2012-01-01',
         'Nama Kontak', 'Orang Tua', '08123456789',
@@ -371,20 +368,19 @@ export const accountService = {
         templateSheet.getCell(`D${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$B$1:$B$${religionList.length}`] };
         templateSheet.getCell(`I${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$C$1:$C$${maritalList.length}`] };
         templateSheet.getCell(`N${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$F$1:$F$${locList.length}`] };
-        templateSheet.getCell(`O${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$D$1:$D$${empTypeList.length}`] };
-        // Jenis Kontrak (Col 19 - S)
-        templateSheet.getCell(`S${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$I$1:$I$${contractTypeList.length}`] };
-        // Pendidikan Terakhir (Col 22 - V)
-        templateSheet.getCell(`V${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$H$1:$H$${educationList.length}`] };
-        // Pilih Jadwal Kerja (Col 28 - AB)
-        templateSheet.getCell(`AB${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$G$1:$G$${schList.length}`] };
-        // Akumulasi Cuti (Col 31 - AE)
+        // Jenis Kontrak (Col 16 - P)
+        templateSheet.getCell(`P${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$I$1:$I$${contractTypeList.length}`] };
+        // Pendidikan Terakhir (Col 19 - S)
+        templateSheet.getCell(`S${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$H$1:$H$${educationList.length}`] };
+        // Pilih Jadwal Kerja (Col 25 - Y)
+        templateSheet.getCell(`Y${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$G$1:$G$${schList.length}`] };
+        // Akumulasi Cuti (Col 28 - AB)
+        templateSheet.getCell(`AB${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$E$1:$E$2`] };
+        // Radius Limits (Col 31-34 - AE-AH)
         templateSheet.getCell(`AE${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$E$1:$E$2`] };
-        // Radius Limits (Col 34-37 - AH-AK)
+        templateSheet.getCell(`AF${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$E$1:$E$2`] };
+        templateSheet.getCell(`AG${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$E$1:$E$2`] };
         templateSheet.getCell(`AH${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$E$1:$E$2`] };
-        templateSheet.getCell(`AI${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$E$1:$E$2`] };
-        templateSheet.getCell(`AJ${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$E$1:$E$2`] };
-        templateSheet.getCell(`AK${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$E$1:$E$2`] };
       }
 
       templateSheet.columns.forEach(column => {
@@ -479,7 +475,7 @@ export const accountService = {
                 'Nama Lengkap (*)', 'NIK KTP (*)', 'Gender (*)', 'Agama (*)', 'Tgl Lahir (YYYY-MM-DD) (*)',
                 'Alamat (*)', 'No Telepon (*)', 'Email (*)', 'Status Nikah (*)',
                 'NIK Internal (*)', 'Jabatan (*)', 'Departemen/Divisi (*)', 'Lokasi Penempatan (*)',
-                'Jenis Karyawan (*)', 'Tanggal Bergabung (YYYY-MM-DD) (*)',
+                'Nomor Kontrak (*)', 'Jenis Kontrak (*)', 'Mulai Kontrak (YYYY-MM-DD) (*)',
                 'Pendidikan Terakhir (*)',
                 'Pilih Jadwal Kerja (*)', 'Jatah Cuti Tahunan (*)',
                 'Akumulasi Cuti (Ya/Tidak) (*)', 'Maksimal Carry-over (*)', 'Jatah Carry-over Saat Ini (*)',
@@ -496,6 +492,7 @@ export const accountService = {
                 const val = row[field];
                 return val === undefined || val === null || String(val).trim() === '';
               });
+
               if (missingFields.length > 0) {
                 // Clean up field names for display (remove (*) and simplify)
                 const cleanNames = missingFields.map(f => f.replace(' (*)', '').replace(' (Ya/Tidak)', '').replace(' (YYYY-MM-DD)', ''));
@@ -506,9 +503,17 @@ export const accountService = {
               const gender = normalizeOption(getVal('Gender (*)'), VALID_OPTIONS.gender);
               const religion = normalizeOption(getVal('Agama (*)'), VALID_OPTIONS.religion);
               const maritalStatus = normalizeOption(getVal('Status Nikah (*)'), VALID_OPTIONS.marital_status);
-              const employeeType = normalizeOption(getVal('Jenis Karyawan (*)'), VALID_OPTIONS.employee_type);
+              const contractType = normalizeOption(getVal('Jenis Kontrak (*)'), ['PKWT', 'PKWTT', 'Magang', 'Harian', 'Addendum']);
               const lastEducation = normalizeOption(getVal('Pendidikan Terakhir (*)'), VALID_OPTIONS.last_education);
               const isLeaveAccumulatedStr = normalizeOption(getVal('Akumulasi Cuti (Ya/Tidak) (*)'), VALID_OPTIONS.yes_no);
+              
+              // Mapping Jenis Kontrak ke Jenis Karyawan
+              let employeeType = 'Kontrak';
+              if (contractType === 'PKWTT') employeeType = 'Tetap';
+              else if (contractType === 'Magang') employeeType = 'Magang';
+              else if (contractType === 'Harian') employeeType = 'Harian';
+              else if (contractType === 'PKWT') employeeType = 'Kontrak';
+
               const limitCheckin = normalizeOption(getVal('Batasi Check-in Datang (Ya/Tidak) (*)'), VALID_OPTIONS.yes_no);
               const limitCheckout = normalizeOption(getVal('Batasi Check-out Pulang (Ya/Tidak) (*)'), VALID_OPTIONS.yes_no);
               const limitOtIn = normalizeOption(getVal('Batasi Check-in Lembur (Ya/Tidak) (*)'), VALID_OPTIONS.yes_no);
@@ -590,9 +595,9 @@ export const accountService = {
                 position: getVal('Jabatan (*)'),
                 grade: getVal('Departemen/Divisi (*)'),
                 location_name: getVal('Lokasi Penempatan (*)'),
-                employee_type: employeeType || getVal('Jenis Karyawan (*)'),
-                start_date: formatExcelDate(row['Tanggal Bergabung (YYYY-MM-DD) (*)']),
-                end_date: formatExcelDate(row['Tanggal Berakhir (YYYY-MM-DD)']),
+                employee_type: employeeType,
+                start_date: formatExcelDate(row['Mulai Kontrak (YYYY-MM-DD) (*)']),
+                end_date: formatExcelDate(row['Akhir Kontrak (YYYY-MM-DD)']),
                 last_education: lastEducation || getVal('Pendidikan Terakhir (*)'),
                 major: getVal('Jurusan'),
                 grad_date: formatExcelDate(row['Tgl Lulus (YYYY-MM-DD)']),

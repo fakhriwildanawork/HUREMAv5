@@ -51,8 +51,8 @@ export const contractService = {
     
     if (error) throw error;
 
-    // Sinkronisasi: Update end_date di profil utama karyawan berdasarkan kontrak terbaru
-    await this.syncAccountEndDate(input.account_id);
+    // Sinkronisasi: Update status dan tanggal di profil utama karyawan berdasarkan log kontrak
+    await this.syncAccountStatusAndDates(input.account_id);
 
     return data[0] as AccountContract;
   },
@@ -74,7 +74,7 @@ export const contractService = {
     }
 
     if (accountId) {
-       await this.syncAccountEndDate(accountId);
+       await this.syncAccountStatusAndDates(accountId);
     }
 
     return data[0] as AccountContract;
@@ -100,32 +100,50 @@ export const contractService = {
 
     // 4. Sinkronisasi
     if (accountId) {
-      await this.syncAccountEndDate(accountId);
+      await this.syncAccountStatusAndDates(accountId);
     }
 
     return true;
   },
 
-  async syncAccountEndDate(accountId: string) {
-    // 1. Ambil semua kontrak untuk akun ini, urutkan berdasarkan start_date terbaru
+  async syncAccountStatusAndDates(accountId: string) {
+    // 1. Ambil semua kontrak untuk akun ini, urutkan berdasarkan start_date
     const { data: contracts, error } = await supabase
       .from('account_contracts')
-      .select('end_date, contract_type')
+      .select('start_date, end_date, contract_type')
       .eq('account_id', accountId)
-      .order('start_date', { ascending: false });
+      .order('start_date', { ascending: true });
 
     if (error) throw error;
+    if (!contracts || contracts.length === 0) return;
 
-    // 2. Ambil kontrak terbaru
-    const latestContract = contracts?.[0];
+    // 2. Tentukan Tanggal Bergabung (kontrak paling awal)
+    const earliestContract = contracts[0];
+    const startDate = earliestContract.start_date;
 
-    // 3. Update end_date di tabel accounts
+    // 3. Tentukan Status dan Estimasi Berakhir (kontrak paling baru secara kronologis)
+    // Kita urutkan ulang secara lokal untuk mendapatkan yang terbaru
+    const sortedByLatest = [...contracts].sort((a, b) => 
+      new Date(b.start_date).getTime() - new Date(a.start_date).getTime()
+    );
+    const latestContract = sortedByLatest[0];
+
+    // Mapping Jenis Kontrak ke Jenis Karyawan
+    let employeeType = 'Kontrak';
+    if (latestContract.contract_type === 'PKWTT') employeeType = 'Tetap';
+    else if (latestContract.contract_type === 'Magang') employeeType = 'Magang';
+    else if (latestContract.contract_type === 'Harian') employeeType = 'Harian';
+    else if (latestContract.contract_type === 'PKWT') employeeType = 'Kontrak';
+    // Addendum biasanya mengikuti status kontrak sebelumnya, default ke Kontrak jika ragu
+
     // Jika kontrak terbaru adalah PKWTT atau tidak punya end_date, maka end_date di accounts adalah null
-    const newEndDate = (latestContract?.contract_type === 'PKWTT' || !latestContract?.end_date) 
+    const newEndDate = (latestContract.contract_type === 'PKWTT' || !latestContract.end_date) 
       ? null 
       : latestContract.end_date;
 
     await accountService.update(accountId, {
+      start_date: startDate,
+      employee_type: employeeType as 'Tetap' | 'Kontrak' | 'Harian' | 'Magang',
       end_date: newEndDate
     });
   },

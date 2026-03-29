@@ -165,8 +165,8 @@ export const disciplineService = {
     const { error } = await supabase.from('account_termination_logs').delete().eq('id', id);
     if (error) throw error;
 
-    // Aktifkan kembali akun dengan mensinkronisasi end_date dari kontrak terakhir
-    await contractService.syncAccountEndDate(accountId);
+    // Aktifkan kembali akun dengan mensinkronisasi status dan tanggal dari kontrak terakhir
+    await contractService.syncAccountStatusAndDates(accountId);
     return true;
   },
 
