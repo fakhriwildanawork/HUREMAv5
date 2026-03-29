@@ -48,14 +48,25 @@ const AccountImportModal: React.FC<AccountImportModalProps> = ({ onClose, onSucc
         if (!internalNik) return row;
         
         const normalizedNik = String(internalNik).replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-        const match = updatedFileList.find(f => {
+        
+        const updates: any = {};
+        updatedFileList.forEach(f => {
           const normalizedFileName = f.name.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-          return normalizedFileName === normalizedNik || normalizedFileName.includes(normalizedNik);
+          if (normalizedFileName.includes(normalizedNik)) {
+            if (normalizedFileName.includes('photo')) updates.photo_google_id = f.id;
+            else if (normalizedFileName.includes('ktp')) updates.ktp_google_id = f.id;
+            else if (normalizedFileName.includes('sk')) updates.file_sk_id = f.id;
+            else if (normalizedFileName.includes('contract')) {
+              updates.contract_initial = { ...row.contract_initial, file_id: f.id };
+            }
+            else if (normalizedFileName.includes('diploma')) updates.diploma_google_id = f.id;
+            else if (normalizedFileName === normalizedNik) updates.photo_google_id = f.id;
+          }
         });
 
         return {
           ...row,
-          photo_google_id: match ? match.id : row.photo_google_id
+          ...updates
         };
       }));
       
@@ -88,14 +99,35 @@ const AccountImportModal: React.FC<AccountImportModalProps> = ({ onClose, onSucc
       if (!internalNik) return row;
       
       const normalizedNik = String(internalNik).replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-      const stillExists = updatedFileList.some(f => {
+      
+      const updates: any = {
+        photo_google_id: null,
+        ktp_google_id: null,
+        file_sk_id: null,
+        diploma_google_id: null
+      };
+
+      updatedFileList.forEach(f => {
         const normalizedFileName = f.name.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-        return normalizedFileName === normalizedNik || normalizedFileName.includes(normalizedNik);
+        if (normalizedFileName.includes(normalizedNik)) {
+          if (normalizedFileName.includes('photo')) updates.photo_google_id = f.id;
+          else if (normalizedFileName.includes('ktp')) updates.ktp_google_id = f.id;
+          else if (normalizedFileName.includes('sk')) updates.file_sk_id = f.id;
+          else if (normalizedFileName.includes('contract')) {
+            updates.contract_initial = { ...row.contract_initial, file_id: f.id };
+          }
+          else if (normalizedFileName.includes('diploma')) updates.diploma_google_id = f.id;
+          else if (normalizedFileName === normalizedNik) updates.photo_google_id = f.id;
+        }
       });
+
+      if (updates.contract_initial === undefined) {
+        updates.contract_initial = { ...row.contract_initial, file_id: null };
+      }
 
       return {
         ...row,
-        photo_google_id: stillExists ? row.photo_google_id : null
+        ...updates
       };
     }));
   };
@@ -166,7 +198,7 @@ const AccountImportModal: React.FC<AccountImportModalProps> = ({ onClose, onSucc
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
           <div>
             <h3 className="text-base font-bold text-[#006E62]">Impor Massal Akun Karyawan</h3>
-            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Tahap {step}: {step === 1 ? 'Unggah File & Pratinjau' : 'Unggah Foto Profil'}</p>
+            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Tahap {step}: {step === 1 ? 'Unggah File & Pratinjau' : 'Unggah Foto & Dokumen Pendukung'}</p>
           </div>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
             <X size={20} />
@@ -268,8 +300,19 @@ const AccountImportModal: React.FC<AccountImportModalProps> = ({ onClose, onSucc
                   <User size={32} />
                 </div>
                 <div className="text-center max-w-md">
-                  <h4 className="text-lg font-bold text-gray-800">2. Unggah Foto Profil (Opsional)</h4>
-                  <p className="text-xs text-gray-500 mt-2">Unggah file foto karyawan. Sistem akan mencocokkan nama file dengan NIK Internal di Excel secara otomatis.</p>
+                  <h4 className="text-lg font-bold text-gray-800">2. Unggah Foto & Dokumen Pendukung (Opsional)</h4>
+                  <p className="text-xs text-gray-500 mt-2">Unggah file foto dan dokumen karyawan. Sistem akan mencocokkan nama file dengan NIK Internal secara otomatis berdasarkan akhiran nama file.</p>
+                </div>
+
+                <div className="mt-4 bg-blue-50 p-3 rounded-md border border-blue-100 w-full max-w-2xl">
+                  <p className="text-[10px] font-bold text-blue-800 uppercase mb-2">Aturan Penamaan File:</p>
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-[9px] text-blue-700">
+                    <div><span className="font-bold">Foto:</span> NIK_photo</div>
+                    <div><span className="font-bold">KTP:</span> NIK_ktp</div>
+                    <div><span className="font-bold">SK:</span> NIK_sk</div>
+                    <div><span className="font-bold">Kontrak:</span> NIK_contract</div>
+                    <div><span className="font-bold">Ijazah:</span> NIK_diploma</div>
+                  </div>
                 </div>
 
                 <div className="mt-6 w-full max-w-md">
@@ -307,14 +350,18 @@ const AccountImportModal: React.FC<AccountImportModalProps> = ({ onClose, onSucc
                 </div>
 
                 <div className="md:col-span-2 space-y-3">
-                  <h5 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status Pencocokan Foto</h5>
+                  <h5 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status Pencocokan Dokumen</h5>
                   <div className="border border-gray-100 rounded overflow-hidden">
                     <table className="w-full text-left text-[10px]">
                       <thead className="bg-gray-50 font-bold text-gray-500 uppercase">
                         <tr>
                           <th className="px-3 py-2">Nama Karyawan</th>
-                          <th className="px-3 py-2">NIK Internal</th>
-                          <th className="px-3 py-2">Status Foto</th>
+                          <th className="px-3 py-2">NIK</th>
+                          <th className="px-3 py-2 text-center">Foto</th>
+                          <th className="px-3 py-2 text-center">KTP</th>
+                          <th className="px-3 py-2 text-center">SK</th>
+                          <th className="px-3 py-2 text-center">Kontrak</th>
+                          <th className="px-3 py-2 text-center">Ijazah</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-50">
@@ -322,16 +369,20 @@ const AccountImportModal: React.FC<AccountImportModalProps> = ({ onClose, onSucc
                           <tr key={idx}>
                             <td className="px-3 py-2 font-medium">{row.full_name}</td>
                             <td className="px-3 py-2 font-mono">{row.internal_nik}</td>
-                            <td className="px-3 py-2">
-                              {row.photo_google_id ? (
-                                <span className="inline-flex items-center gap-1 text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded">
-                                  <CheckCircle size={10} /> TERPASANG
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center gap-1 text-gray-400 italic bg-gray-100 px-2 py-0.5 rounded">
-                                  TIDAK ADA
-                                </span>
-                              )}
+                            <td className="px-3 py-2 text-center">
+                              {row.photo_google_id ? <CheckCircle size={14} className="text-emerald-500 mx-auto" /> : <X size={14} className="text-gray-300 mx-auto" />}
+                            </td>
+                            <td className="px-3 py-2 text-center">
+                              {row.ktp_google_id ? <CheckCircle size={14} className="text-emerald-500 mx-auto" /> : <X size={14} className="text-gray-300 mx-auto" />}
+                            </td>
+                            <td className="px-3 py-2 text-center">
+                              {row.file_sk_id ? <CheckCircle size={14} className="text-emerald-500 mx-auto" /> : <X size={14} className="text-gray-300 mx-auto" />}
+                            </td>
+                            <td className="px-3 py-2 text-center">
+                              {row.contract_initial?.file_id ? <CheckCircle size={14} className="text-emerald-500 mx-auto" /> : <X size={14} className="text-gray-300 mx-auto" />}
+                            </td>
+                            <td className="px-3 py-2 text-center">
+                              {row.diploma_google_id ? <CheckCircle size={14} className="text-emerald-500 mx-auto" /> : <X size={14} className="text-gray-300 mx-auto" />}
                             </td>
                           </tr>
                         ))}

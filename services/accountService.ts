@@ -416,14 +416,27 @@ export const accountService = {
               };
 
               const internalNik = String(getVal('NIK Internal (*)')).trim();
-              let matchedPhotoId = null;
+              const fileMatches: any = {
+                photo_google_id: null,
+                ktp_google_id: null,
+                diploma_google_id: null,
+                file_sk_id: null,
+                contract_file_id: null
+              };
+
               if (internalNik) {
                 const normalizedNik = internalNik.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-                const match = Object.entries(bulkFiles).find(([fileName]) => {
+                Object.entries(bulkFiles).forEach(([fileName, fileId]) => {
                   const normalizedFileName = fileName.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-                  return normalizedFileName === normalizedNik || normalizedFileName.includes(normalizedNik);
+                  if (normalizedFileName.includes(normalizedNik)) {
+                    if (normalizedFileName.includes('photo')) fileMatches.photo_google_id = fileId;
+                    else if (normalizedFileName.includes('ktp')) fileMatches.ktp_google_id = fileId;
+                    else if (normalizedFileName.includes('sk')) fileMatches.file_sk_id = fileId;
+                    else if (normalizedFileName.includes('contract')) fileMatches.contract_file_id = fileId;
+                    else if (normalizedFileName.includes('diploma')) fileMatches.diploma_google_id = fileId;
+                    else if (normalizedFileName === normalizedNik) fileMatches.photo_google_id = fileId;
+                  }
                 });
-                if (match) matchedPhotoId = match[1];
               }
 
               const requiredFields = [
@@ -562,7 +575,17 @@ export const accountService = {
                 is_presence_limited_ot_out: limitOtOut !== 'Tidak',
                 access_code: String(getVal('Kode Akses (*)')),
                 password: String(getVal('Password (*)')),
-                photo_google_id: matchedPhotoId,
+                photo_google_id: fileMatches.photo_google_id,
+                ktp_google_id: fileMatches.ktp_google_id,
+                diploma_google_id: fileMatches.diploma_google_id,
+                file_sk_id: fileMatches.file_sk_id,
+                contract_initial: {
+                  contract_number: `CON-${internalNik}`,
+                  contract_type: getVal('Jenis Karyawan (*)') === 'Tetap' ? 'PKWTT' : 'PKWT',
+                  start_date: formatExcelDate(row['Tgl Mulai (YYYY-MM-DD) (*)']),
+                  end_date: formatExcelDate(row['Tgl Akhir (YYYY-MM-DD)']),
+                  file_id: fileMatches.contract_file_id
+                },
                 isValid,
                 errorMsg
               };
